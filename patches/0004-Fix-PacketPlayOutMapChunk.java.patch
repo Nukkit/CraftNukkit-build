@@ -1,0 +1,20 @@
+From 1d2ba0813e2bf120f4243bf4edb3095451bb59a2 Mon Sep 17 00:00:00 2001
+From: Ribesg <ribesg@yahoo.fr>
+Date: Thu, 3 Apr 2014 00:00:00 +0200
+Subject: [PATCH] Fix PacketPlayOutMapChunk.java
+* Add missing 'throws' declaration
+
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+index 29df20d..8528d5b 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+@@ -45,7 +45,7 @@ public class PacketPlayOutMapChunk extends Packet {
+         return 196864;
+     }
+ 
+-    public void a(PacketDataSerializer packetdataserializer) {
++    public void a(PacketDataSerializer packetdataserializer) throws IOException {
+         this.a = packetdataserializer.readInt();
+         this.b = packetdataserializer.readInt();
+         this.inflatedBuffer = packetdataserializer.readBoolean();
+-- 

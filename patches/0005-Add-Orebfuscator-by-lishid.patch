@@ -1,0 +1,254 @@
+From d70969a74588d57230e94681fc7c52cad2046c82 Mon Sep 17 00:00:00 2001
+From: Ribesg <ribesg@yahoo.fr>
+Date: Thu, 3 Apr 2014 00:00:00 +0200
+Subject: [PATCH] Add Orebfuscator by lishid
+* Will be updated later, it's not done done
+
+diff --git a/src/main/java/fr/ribesg/nukkit/Orebfuscator.java b/src/main/java/fr/ribesg/nukkit/Orebfuscator.java
+new file mode 100644
+index 0000000..0b31b97
+--- /dev/null
++++ b/src/main/java/fr/ribesg/nukkit/Orebfuscator.java
+@@ -0,0 +1,136 @@
++package fr.ribesg.nukkit;
++
++import net.minecraft.server.Block;
++import net.minecraft.server.Blocks;
++import net.minecraft.server.World;
++import net.minecraft.util.gnu.trove.set.TByteSet;
++import net.minecraft.util.gnu.trove.set.hash.TByteHashSet;
++
++/**
++ * Based on the work of lishid and the Spigot integration.
++ * Simplified because I don't need all the stuff.
++ *
++ * @author lishid
++ * @author Ribesg
++ */
++public class Orebfuscator {
++
++    private static final boolean[] obfuscateBlocks = new boolean[Short.MAX_VALUE];
++    private static final byte[] replacementOres;
++
++    static {
++        obfuscateBlocks[1] = true;
++        obfuscateBlocks[5] = true;
++
++        // For every block
++        TByteSet blocks = new TByteHashSet();
++        for (int i : new int[]{14, 15, 16, 21, 48, 49, 54, 56, 73, 74, 82, 129, 130}) {
++            Block block = Block.e(i);
++            if (block != null && !block.isTileEntity()) {
++                blocks.add((byte) i);
++            }
++        }
++        replacementOres = blocks.toArray();
++    }
++
++    /**
++     * Starts the timings handler, then updates all blocks within the set radius
++     * of the given coordinate, revealing them if they are hidden ores.
++     */
++    public static void updateNearbyBlocks(World world, int x, int y, int z) {
++        updateNearbyBlocks(world, x, y, z, 2, false);
++    }
++
++    /**
++     * Starts the timings handler, and then removes all non exposed ores from
++     * the chunk buffer.
++     */
++    public static void obfuscateSync(int chunkX, int chunkY, int bitmask, byte[] buffer, World world) {
++        obfuscate(chunkX, chunkY, bitmask, buffer, world);
++    }
++
++    /**
++     * Removes all non exposed ores from the chunk buffer.
++     */
++    public static void obfuscate(int chunkX, int chunkY, int bitmask, byte[] buffer, World world) {
++        int initialRadius = 1;
++        int index = 0;
++        int randomOre = 0;
++
++        int startX = chunkX << 4;
++        int startZ = chunkY << 4;
++
++        for (int i = 0; i < 16; i++) {
++            if ((bitmask & 1 << i) != 0) {
++                for (int y = 0; y < 16; y++) {
++                    for (int z = 0; z < 16; z++) {
++                        for (int x = 0; x < 16; x++) {
++                            if (index >= buffer.length) {
++                                index++;
++                                continue;
++                            }
++                            int blockId = buffer[index] & 0xFF;
++                            if (obfuscateBlocks[blockId]) {
++                                if (!isLoaded(world, startX + x, (i << 4) + y, startZ + z, initialRadius)) {
++                                    index++;
++                                    continue;
++                                }
++                                if (!hasTransparentBlockAdjacent(world, startX + x, (i << 4) + y, startZ + z, initialRadius)) {
++                                    if (randomOre >= replacementOres.length) {
++                                        randomOre = 0;
++                                    }
++                                    buffer[index] = replacementOres[randomOre++];
++                                }
++                            }
++                            index++;
++                        }
++                    }
++                }
++            }
++        }
++    }
++
++    private static void updateNearbyBlocks(World world, int x, int y, int z, int radius, boolean updateSelf) {
++        if (world.isLoaded(x, y, z)) {
++            Block block = world.getType(x, y, z);
++
++            if (updateSelf && obfuscateBlocks[Block.b(block)]) {
++                world.notify(x, y, z);
++            }
++
++            if (radius > 0) {
++                updateNearbyBlocks(world, x + 1, y, z, radius - 1, true);
++                updateNearbyBlocks(world, x - 1, y, z, radius - 1, true);
++                updateNearbyBlocks(world, x, y + 1, z, radius - 1, true);
++                updateNearbyBlocks(world, x, y - 1, z, radius - 1, true);
++                updateNearbyBlocks(world, x, y, z + 1, radius - 1, true);
++                updateNearbyBlocks(world, x, y, z - 1, radius - 1, true);
++            }
++        }
++    }
++
++    private static boolean isLoaded(World world, int x, int y, int z, int radius) {
++        return world.isLoaded(x, y, z) &&
++                (radius == 0 ||
++                        (isLoaded(world, x + 1, y, z, radius - 1) &&
++                                isLoaded(world, x - 1, y, z, radius - 1) &&
++                                isLoaded(world, x, y + 1, z, radius - 1) &&
++                                isLoaded(world, x, y - 1, z, radius - 1) &&
++                                isLoaded(world, x, y, z + 1, radius - 1) &&
++                                isLoaded(world, x, y, z - 1, radius - 1)));
++    }
++
++    private static boolean hasTransparentBlockAdjacent(World world, int x, int y, int z, int radius) {
++        return !isSolidBlock(world.getType(x, y, z)) ||
++                (radius > 0 && (hasTransparentBlockAdjacent(world, x + 1, y, z, radius - 1) ||
++                        hasTransparentBlockAdjacent(world, x - 1, y, z, radius - 1) ||
++                        hasTransparentBlockAdjacent(world, x, y + 1, z, radius - 1) ||
++                        hasTransparentBlockAdjacent(world, x, y - 1, z, radius - 1) ||
++                        hasTransparentBlockAdjacent(world, x, y, z + 1, radius - 1) ||
++                        hasTransparentBlockAdjacent(world, x, y, z - 1, radius - 1)));
++    }
++
++    private static boolean isSolidBlock(Block block) {
++        return block.r() && block != Blocks.MOB_SPAWNER;
++    }
++}
+diff --git a/src/main/java/net/minecraft/server/EntityFallingBlock.java b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+index 991a765..5704558 100644
+--- a/src/main/java/net/minecraft/server/EntityFallingBlock.java
++++ b/src/main/java/net/minecraft/server/EntityFallingBlock.java
+@@ -86,6 +86,7 @@ public class EntityFallingBlock extends Entity {
+                     }
+ 
+                     this.world.setAir(i, j, k);
++                    fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this.world, i, j, k); // Nukkit
+                 }
+ 
+                 if (this.onGround) {
+@@ -101,6 +102,7 @@ public class EntityFallingBlock extends Entity {
+                             }
+                             this.world.setTypeAndData(i, j, k, this.id, this.data, 3);
+                             // CraftBukkit end
++                            fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this.world, i, j, k); // Nukkit
+ 
+                             if (this.id instanceof BlockFalling) {
+                                 ((BlockFalling) this.id).a(this.world, i, j, k, this.data);
+diff --git a/src/main/java/net/minecraft/server/Explosion.java b/src/main/java/net/minecraft/server/Explosion.java
+index 39e5b5b..bc1f486 100644
+--- a/src/main/java/net/minecraft/server/Explosion.java
++++ b/src/main/java/net/minecraft/server/Explosion.java
+@@ -239,6 +239,7 @@ public class Explosion {
+                 j = chunkposition.y;
+                 k = chunkposition.z;
+                 block = this.world.getType(i, j, k);
++                fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this.world, i, j, k); // Nukkit
+                 if (flag) {
+                     double d0 = (double) ((float) i + this.world.random.nextFloat());
+                     double d1 = (double) ((float) j + this.world.random.nextFloat());
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
+index 3eac231..4fdd5fe 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
+@@ -26,6 +26,7 @@ public class PacketPlayOutMapChunkBulk extends Packet {
+         }
+     };
+     // CraftBukkit end
++    private World world; // Nukkit
+ 
+     public PacketPlayOutMapChunkBulk() {}
+ 
+@@ -44,6 +45,7 @@ public class PacketPlayOutMapChunkBulk extends Packet {
+             Chunk chunk = (Chunk) list.get(k);
+             ChunkMap chunkmap = PacketPlayOutMapChunk.a(chunk, true, '\uffff');
+ 
++            this.world = chunk.world; /* // Nukkit
+             if (buildBuffer.length < j + chunkmap.a.length) {
+                 byte[] abyte = new byte[j + chunkmap.a.length];
+ 
+@@ -52,6 +54,7 @@ public class PacketPlayOutMapChunkBulk extends Packet {
+             }
+ 
+             System.arraycopy(chunkmap.a, 0, buildBuffer, j, chunkmap.a.length);
++            */ // Nukkit
+             j += chunkmap.a.length;
+             this.a[k] = chunk.locX;
+             this.b[k] = chunk.locZ;
+@@ -80,6 +83,20 @@ public class PacketPlayOutMapChunkBulk extends Packet {
+             return;
+         }
+ 
++        // Nukkit start
++        int finalBufferSize = 0;
++        for (int i = 0; i < a.length; i++) {
++            fr.ribesg.nukkit.Orebfuscator.obfuscate(a[i], b[i], c[i], inflatedBuffers[i], world);
++            finalBufferSize += inflatedBuffers[i].length;
++        }
++        buildBuffer = new byte[finalBufferSize];
++        int bufferLocation = 0;
++        for (int i = 0; i < a.length; i++) {
++            System.arraycopy(inflatedBuffers[i], 0, buildBuffer, bufferLocation, inflatedBuffers[i].length);
++            bufferLocation += inflatedBuffers[i].length;
++        }
++        // Nukkit end
++
+         Deflater deflater = localDeflater.get();
+         deflater.reset();
+         deflater.setInput(this.buildBuffer);
+diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+index bceba7b..1c4e4b7 100644
+--- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
++++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
+@@ -173,6 +173,7 @@ public class PlayerInteractManager {
+                     this.o = i1;
+                 }
+             }
++            fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(world, i, j, k); // Nukkit
+         }
+     }
+ 
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 4a42bb4..7aca6e9 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -405,6 +405,7 @@ public abstract class World implements IBlockAccess {
+         }
+         // CraftBukkit end
+         this.applyPhysics(i, j, k, block);
++        fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this, i, j, k); // Nukkit
+     }
+ 
+     public void b(int i, int j, int k, int l) {
+-- 

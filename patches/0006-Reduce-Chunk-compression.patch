@@ -1,0 +1,33 @@
+From cff1a705458d723809f945fcd6fe14b8a6e2daaf Mon Sep 17 00:00:00 2001
+From: Ribesg <ribesg@yahoo.fr>
+Date: Thu, 3 Apr 2014 00:00:00 +0200
+Subject: [PATCH] Reduce Chunk compression
+* Increase Bandwidth usage a bit to reduce CPU usage a bit
+
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+index 8528d5b..9a87208 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+@@ -24,7 +24,7 @@ public class PacketPlayOutMapChunk extends Packet {
+         this.b = chunk.locZ;
+         this.inflatedBuffer = flag;
+         ChunkMap chunkmap = a(chunk, flag, i);
+-        Deflater deflater = new Deflater(-1);
++        Deflater deflater = new Deflater(4); // Nukkit: -1 -> 4
+ 
+         this.d = chunkmap.c;
+         this.c = chunkmap.b;
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
+index 4fdd5fe..8828b66 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
+@@ -22,7 +22,7 @@ public class PacketPlayOutMapChunkBulk extends Packet {
+         @Override
+         protected Deflater initialValue() {
+             // Don't use higher compression level, slows things down too much
+-            return new Deflater(6);
++            return new Deflater(4); // Nukkit: 6 -> 4
+         }
+     };
+     // CraftBukkit end
+-- 
