@@ -1,0 +1,19 @@
+From 03a4177fdc579074ba2774cffc053b24b20960fa Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Fri, 4 Apr 2014 22:03:55 +0200
+Subject: [PATCH] Disable CraftBukkit auto-updater.
+
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 861744c..0f50333 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -305,7 +305,7 @@ public final class CraftServer implements Server {
+         loadIcon();
+ 
+         updater = new AutoUpdater(new BukkitDLUpdaterService(configuration.getString("auto-updater.host")), getLogger(), configuration.getString("auto-updater.preferred-channel"));
+-        updater.setEnabled(configuration.getBoolean("auto-updater.enabled"));
++        updater.setEnabled(false /* configuration.getBoolean("auto-updater.enabled") */); // Nukkit
+         updater.setSuggestChannels(configuration.getBoolean("auto-updater.suggest-channels"));
+         updater.getOnBroken().addAll(configuration.getStringList("auto-updater.on-broken"));
+         updater.getOnUpdate().addAll(configuration.getStringList("auto-updater.on-update"));
+-- 
