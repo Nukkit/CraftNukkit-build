@@ -1,22 +1,134 @@
-From d70969a74588d57230e94681fc7c52cad2046c82 Mon Sep 17 00:00:00 2001
-From: Ribesg <ribesg@yahoo.fr>
-Date: Thu, 3 Apr 2014 00:00:00 +0200
-Subject: [PATCH] Add Orebfuscator by lishid
-* Will be updated later, it's not done done
+From 0a228ac7221d791110f11b6800e0990a2ee6d699 Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Fri, 4 Apr 2014 20:14:32 +0200
+Subject: [PATCH] Add Orebfuscator by lishid.
+* Configurable hidden blocks
+* Configurable replacement blocks
 
+diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+index 124642b..f87a3a2 100644
+--- a/src/main/java/fr/ribesg/nukkit/Nukkit.java
++++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+@@ -1,10 +1,14 @@
+ package fr.ribesg.nukkit;
+ 
++import net.minecraft.server.Block;
++import net.minecraft.util.gnu.trove.set.TByteSet;
++import net.minecraft.util.gnu.trove.set.hash.TByteHashSet;
+ import org.bukkit.configuration.InvalidConfigurationException;
+ import org.bukkit.configuration.file.YamlConfiguration;
+ import org.bukkit.craftbukkit.CraftServer;
+ 
+ import java.io.*;
++import java.util.List;
+ import java.util.Scanner;
+ import java.util.logging.Level;
+ 
+@@ -19,6 +23,16 @@ public class Nukkit {
+      * Configuration values  *
+      * * * * * * * * * * * * */
+ 
++    /**
++     * Orebfuscator - blocks hidden
++     */
++    private final boolean[] replacedBlocks = new boolean[Short.MAX_VALUE];
++
++    /**
++     * Orebfuscator - blocks that will replace hidden blocks
++     */
++    private byte[] replacedWith;
++
+     /* * * * * * * * * *
+      * Static methods  *
+      * * * * * * * * * */
+@@ -30,6 +44,8 @@ public class Nukkit {
+      */
+     public static void init(final CraftServer server) {
+         instance = new Nukkit(server);
++
++        Orebfuscator.init(instance.replacedBlocks, instance.replacedWith);
+     }
+ 
+     /* * * * * * * *
+@@ -66,6 +82,11 @@ public class Nukkit {
+      */
+     private void createConfig(final File nukkitConfigFile) {
+         // Set default values
++        for (int i : new int[]{1, 13, 14, 15, 21, 56, 73, 129}) {
++            this.replacedBlocks[i] = true;
++        }
++
++        this.replacedWith = new byte[]{56};
+ 
+         // Write file
+         try {
+@@ -94,6 +115,24 @@ public class Nukkit {
+         // Header
+         builder.append("# Nukkit configuration file\n\n");
+ 
++        // Orebfuscator - Hidden blocks
++        builder.append("# List of block ids hidden/replaced:\n");
++        builder.append("replacedBlocks:\n");
++        for (int i = 0; i < this.replacedBlocks.length; i++) {
++            if (this.replacedBlocks[i]) {
++                builder.append("- ").append(i).append('\n');
++            }
++        }
++        builder.append("\n");
++
++        // Orebfuscator - Replacing blocks
++        builder.append("# List of block ids which will replace hidden ones:\n");
++        builder.append("replacedBlocks:\n");
++        for (byte id : this.replacedWith) {
++            builder.append("- ").append(0xFF & id).append('\n');
++        }
++        builder.append("\n");
++
+         return builder.toString();
+     }
+ 
+@@ -120,6 +159,30 @@ public class Nukkit {
+         }
+ 
+         // Set config values
++
++        // Orebfuscator - Hidden blocks
++        if (config.isList("replacedBlocks")) {
++            for (int i = 0; i < this.replacedBlocks.length; i++) {
++                this.replacedBlocks[i] = false;
++            }
++            final List<Integer> replacedBlocksList = config.getIntegerList("replacedBlocks");
++            for (final Integer i : replacedBlocksList) {
++                this.replacedBlocks[i] = true;
++            }
++        }
++
++        // Orebfuscator - Replacing blocks
++        if (config.isList("replacedWith")) {
++            final List<Integer> replacedWithList = config.getIntegerList("replacedWith");
++            final TByteSet bytes = new TByteHashSet(replacedWithList.size());
++            for (final Integer i : replacedWithList) {
++                final Block b = Block.e(i);
++                if (b != null && !b.isTileEntity()) {
++                    bytes.add((byte)(int)i);
++                }
++            }
++            this.replacedWith = bytes.toArray();
++        }
+     }
+ 
+ }
 diff --git a/src/main/java/fr/ribesg/nukkit/Orebfuscator.java b/src/main/java/fr/ribesg/nukkit/Orebfuscator.java
 new file mode 100644
-index 0000000..0b31b97
+index 0000000..66a9af4
 --- /dev/null
 +++ b/src/main/java/fr/ribesg/nukkit/Orebfuscator.java
-@@ -0,0 +1,136 @@
+@@ -0,0 +1,134 @@
 +package fr.ribesg.nukkit;
 +
 +import net.minecraft.server.Block;
 +import net.minecraft.server.Blocks;
 +import net.minecraft.server.World;
-+import net.minecraft.util.gnu.trove.set.TByteSet;
-+import net.minecraft.util.gnu.trove.set.hash.TByteHashSet;
 +
 +/**
 + * Based on the work of lishid and the Spigot integration.
@@ -27,50 +139,43 @@ index 0000000..0b31b97
 + */
 +public class Orebfuscator {
 +
-+    private static final boolean[] obfuscateBlocks = new boolean[Short.MAX_VALUE];
-+    private static final byte[] replacementOres;
++    /**
++     * Orebfuscator instance
++     */
++    public static Orebfuscator instance;
 +
-+    static {
-+        obfuscateBlocks[1] = true;
-+        obfuscateBlocks[5] = true;
-+
-+        // For every block
-+        TByteSet blocks = new TByteHashSet();
-+        for (int i : new int[]{14, 15, 16, 21, 48, 49, 54, 56, 73, 74, 82, 129, 130}) {
-+            Block block = Block.e(i);
-+            if (block != null && !block.isTileEntity()) {
-+                blocks.add((byte) i);
-+            }
-+        }
-+        replacementOres = blocks.toArray();
++    /**
++     * Initialize Orebfuscator
++     */
++    public static void init(final boolean[] replacedBlocks, final byte[] replacedWith) {
++        instance = new Orebfuscator(replacedBlocks, replacedWith);
 +    }
 +
 +    /**
-+     * Starts the timings handler, then updates all blocks within the set radius
-+     * of the given coordinate, revealing them if they are hidden ores.
++     * Blocks hidden
 +     */
-+    public static void updateNearbyBlocks(World world, int x, int y, int z) {
-+        updateNearbyBlocks(world, x, y, z, 2, false);
++    private final boolean[] replacedBlocks;
++
++    /**
++     * Blocks that will replace hidden blocks
++     */
++    private final byte[] replacedWith;
++
++    private Orebfuscator(final boolean[] replacedBlocks, final byte[] replacedWith) {
++        this.replacedBlocks = replacedBlocks;
++        this.replacedWith = replacedWith;
 +    }
 +
 +    /**
-+     * Starts the timings handler, and then removes all non exposed ores from
-+     * the chunk buffer.
++     * Removes all non exposed ores from the provided chunk buffer.
 +     */
-+    public static void obfuscateSync(int chunkX, int chunkY, int bitmask, byte[] buffer, World world) {
-+        obfuscate(chunkX, chunkY, bitmask, buffer, world);
-+    }
-+
-+    /**
-+     * Removes all non exposed ores from the chunk buffer.
-+     */
-+    public static void obfuscate(int chunkX, int chunkY, int bitmask, byte[] buffer, World world) {
-+        int initialRadius = 1;
++    public void obfuscate(final int chunkX, final int chunkY, final int bitmask, final byte[] buffer, final World world) {
++        final int initialRadius = 1;
 +        int index = 0;
 +        int randomOre = 0;
 +
-+        int startX = chunkX << 4;
-+        int startZ = chunkY << 4;
++        final int startX = chunkX << 4;
++        final int startZ = chunkY << 4;
 +
 +        for (int i = 0; i < 16; i++) {
 +            if ((bitmask & 1 << i) != 0) {
@@ -81,17 +186,17 @@ index 0000000..0b31b97
 +                                index++;
 +                                continue;
 +                            }
-+                            int blockId = buffer[index] & 0xFF;
-+                            if (obfuscateBlocks[blockId]) {
++                            final int blockId = buffer[index] & 0xFF;
++                            if (replacedBlocks[blockId]) {
 +                                if (!isLoaded(world, startX + x, (i << 4) + y, startZ + z, initialRadius)) {
 +                                    index++;
 +                                    continue;
 +                                }
 +                                if (!hasTransparentBlockAdjacent(world, startX + x, (i << 4) + y, startZ + z, initialRadius)) {
-+                                    if (randomOre >= replacementOres.length) {
++                                    if (randomOre >= replacedWith.length) {
 +                                        randomOre = 0;
 +                                    }
-+                                    buffer[index] = replacementOres[randomOre++];
++                                    buffer[index] = replacedWith[randomOre++];
 +                                }
 +                            }
 +                            index++;
@@ -102,11 +207,18 @@ index 0000000..0b31b97
 +        }
 +    }
 +
-+    private static void updateNearbyBlocks(World world, int x, int y, int z, int radius, boolean updateSelf) {
-+        if (world.isLoaded(x, y, z)) {
-+            Block block = world.getType(x, y, z);
++    /**
++     * Updates all blocks within the set radius of the given coordinate, revealing them if they are hidden ores.
++     */
++    public void updateNearbyBlocks(final World world, final int x, final int y, final int z) {
++        updateNearbyBlocks(world, x, y, z, 2, false);
++    }
 +
-+            if (updateSelf && obfuscateBlocks[Block.b(block)]) {
++    private void updateNearbyBlocks(final World world, final int x, final int y, final int z, final int radius, final boolean updateSelf) {
++        if (world.isLoaded(x, y, z)) {
++            final Block block = world.getType(x, y, z);
++
++            if (updateSelf && replacedBlocks[Block.b(block)]) {
 +                world.notify(x, y, z);
 +            }
 +
@@ -121,7 +233,7 @@ index 0000000..0b31b97
 +        }
 +    }
 +
-+    private static boolean isLoaded(World world, int x, int y, int z, int radius) {
++    private boolean isLoaded(final World world, final int x, final int y, final int z, final int radius) {
 +        return world.isLoaded(x, y, z) &&
 +                (radius == 0 ||
 +                        (isLoaded(world, x + 1, y, z, radius - 1) &&
@@ -132,7 +244,7 @@ index 0000000..0b31b97
 +                                isLoaded(world, x, y, z - 1, radius - 1)));
 +    }
 +
-+    private static boolean hasTransparentBlockAdjacent(World world, int x, int y, int z, int radius) {
++    private boolean hasTransparentBlockAdjacent(final World world, final int x, final int y, final int z, final int radius) {
 +        return !isSolidBlock(world.getType(x, y, z)) ||
 +                (radius > 0 && (hasTransparentBlockAdjacent(world, x + 1, y, z, radius - 1) ||
 +                        hasTransparentBlockAdjacent(world, x - 1, y, z, radius - 1) ||
@@ -142,19 +254,19 @@ index 0000000..0b31b97
 +                        hasTransparentBlockAdjacent(world, x, y, z - 1, radius - 1)));
 +    }
 +
-+    private static boolean isSolidBlock(Block block) {
++    private boolean isSolidBlock(final Block block) {
 +        return block.r() && block != Blocks.MOB_SPAWNER;
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/EntityFallingBlock.java b/src/main/java/net/minecraft/server/EntityFallingBlock.java
-index 991a765..5704558 100644
+index 991a765..589633b 100644
 --- a/src/main/java/net/minecraft/server/EntityFallingBlock.java
 +++ b/src/main/java/net/minecraft/server/EntityFallingBlock.java
 @@ -86,6 +86,7 @@ public class EntityFallingBlock extends Entity {
                      }
  
                      this.world.setAir(i, j, k);
-+                    fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this.world, i, j, k); // Nukkit
++                    fr.ribesg.nukkit.Orebfuscator.instance.updateNearbyBlocks(this.world, i, j, k); // Nukkit
                  }
  
                  if (this.onGround) {
@@ -162,24 +274,36 @@ index 991a765..5704558 100644
                              }
                              this.world.setTypeAndData(i, j, k, this.id, this.data, 3);
                              // CraftBukkit end
-+                            fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this.world, i, j, k); // Nukkit
++                            fr.ribesg.nukkit.Orebfuscator.instance.updateNearbyBlocks(this.world, i, j, k); // Nukkit
  
                              if (this.id instanceof BlockFalling) {
                                  ((BlockFalling) this.id).a(this.world, i, j, k, this.data);
 diff --git a/src/main/java/net/minecraft/server/Explosion.java b/src/main/java/net/minecraft/server/Explosion.java
-index 39e5b5b..bc1f486 100644
+index 39e5b5b..9c74d76 100644
 --- a/src/main/java/net/minecraft/server/Explosion.java
 +++ b/src/main/java/net/minecraft/server/Explosion.java
 @@ -239,6 +239,7 @@ public class Explosion {
                  j = chunkposition.y;
                  k = chunkposition.z;
                  block = this.world.getType(i, j, k);
-+                fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this.world, i, j, k); // Nukkit
++                fr.ribesg.nukkit.Orebfuscator.instance.updateNearbyBlocks(this.world, i, j, k); // Nukkit
                  if (flag) {
                      double d0 = (double) ((float) i + this.world.random.nextFloat());
                      double d1 = (double) ((float) j + this.world.random.nextFloat());
+diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+index 0af58aa..5474f4a 100644
+--- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
++++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+@@ -28,6 +28,7 @@ public class PacketPlayOutMapChunk extends Packet {
+ 
+         this.d = chunkmap.c;
+         this.c = chunkmap.b;
++        fr.ribesg.nukkit.Orebfuscator.instance.obfuscate(chunk.locX, chunk.locZ, i, chunkmap.a, chunk.world); // Nukkit
+ 
+         try {
+             this.buffer = chunkmap.a;
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
-index 3eac231..4fdd5fe 100644
+index 3eac231..33bd0b4 100644
 --- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
 +++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
 @@ -26,6 +26,7 @@ public class PacketPlayOutMapChunkBulk extends Packet {
@@ -213,7 +337,7 @@ index 3eac231..4fdd5fe 100644
 +        // Nukkit start
 +        int finalBufferSize = 0;
 +        for (int i = 0; i < a.length; i++) {
-+            fr.ribesg.nukkit.Orebfuscator.obfuscate(a[i], b[i], c[i], inflatedBuffers[i], world);
++            fr.ribesg.nukkit.Orebfuscator.instance.obfuscate(a[i], b[i], c[i], inflatedBuffers[i], world);
 +            finalBufferSize += inflatedBuffers[i].length;
 +        }
 +        buildBuffer = new byte[finalBufferSize];
@@ -228,26 +352,26 @@ index 3eac231..4fdd5fe 100644
          deflater.reset();
          deflater.setInput(this.buildBuffer);
 diff --git a/src/main/java/net/minecraft/server/PlayerInteractManager.java b/src/main/java/net/minecraft/server/PlayerInteractManager.java
-index bceba7b..1c4e4b7 100644
+index bceba7b..354ef8a 100644
 --- a/src/main/java/net/minecraft/server/PlayerInteractManager.java
 +++ b/src/main/java/net/minecraft/server/PlayerInteractManager.java
 @@ -173,6 +173,7 @@ public class PlayerInteractManager {
                      this.o = i1;
                  }
              }
-+            fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(world, i, j, k); // Nukkit
++            fr.ribesg.nukkit.Orebfuscator.instance.updateNearbyBlocks(world, i, j, k); // Nukkit
          }
      }
  
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
-index 4a42bb4..7aca6e9 100644
+index 4a42bb4..cdbf2cd 100644
 --- a/src/main/java/net/minecraft/server/World.java
 +++ b/src/main/java/net/minecraft/server/World.java
 @@ -405,6 +405,7 @@ public abstract class World implements IBlockAccess {
          }
          // CraftBukkit end
          this.applyPhysics(i, j, k, block);
-+        fr.ribesg.nukkit.Orebfuscator.updateNearbyBlocks(this, i, j, k); // Nukkit
++        fr.ribesg.nukkit.Orebfuscator.instance.updateNearbyBlocks(this, i, j, k); // Nukkit
      }
  
      public void b(int i, int j, int k, int l) {

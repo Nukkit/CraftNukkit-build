@@ -1,14 +1,14 @@
-From 1d2ba0813e2bf120f4243bf4edb3095451bb59a2 Mon Sep 17 00:00:00 2001
-From: Ribesg <ribesg@yahoo.fr>
-Date: Thu, 3 Apr 2014 00:00:00 +0200
-Subject: [PATCH] Fix PacketPlayOutMapChunk.java
-* Add missing 'throws' declaration
+From 6d2d806944f3045796db45b488c693e3beffc3cc Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Fri, 4 Apr 2014 20:06:47 +0200
+Subject: [PATCH] Fix mc-dev files.
+* Add missing 'throws' declaration in PacketPlayOutMapChunk
 
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-index 29df20d..8528d5b 100644
+index 4f64207..b25e0f6 100644
 --- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 +++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-@@ -45,7 +45,7 @@ public class PacketPlayOutMapChunk extends Packet {
+@@ -44,7 +44,7 @@ public class PacketPlayOutMapChunk extends Packet {
          return 196864;
      }
  

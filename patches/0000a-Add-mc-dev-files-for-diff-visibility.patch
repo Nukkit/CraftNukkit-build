@@ -1,15 +1,15 @@
-From 2ba38a27fdf66e9df5e015c3471122005c0ee587 Mon Sep 17 00:00:00 2001
-From: Ribesg <ribesg@yahoo.fr>
-Date: Thu, 4 Apr 2014 19:00:00 +0200
+From c168c7e51945a680c943c307b5141a5d49e691f0 Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Fri, 4 Apr 2014 20:05:37 +0200
 Subject: [PATCH] Add mc-dev files for diff visibility.
-
+* PacketPlayOutMapChunk
 
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 new file mode 100644
-index 0000000..29df20d
+index 0000000..4f64207
 --- /dev/null
 +++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-@@ -0,0 +1,190 @@
+@@ -0,0 +1,189 @@
 +package net.minecraft.server;
 +
 +import java.io.IOException;
@@ -40,7 +40,6 @@ index 0000000..29df20d
 +
 +        this.d = chunkmap.c;
 +        this.c = chunkmap.b;
-+        fr.ribesg.nukkit.Orebfuscator.obfuscateSync(chunk.locX, chunk.locZ, i, chunkmap.a, chunk.world); // Nukkit
 +
 +        try {
 +            this.buffer = chunkmap.a;

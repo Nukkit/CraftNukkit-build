@@ -1,20 +1,14 @@
-From 538c27ef83afc54f2c65fc405a33e6eef1889d6b Mon Sep 17 00:00:00 2001
+From 44bb1b6c8ec23039634422a22b29fd82aed9e94b Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
-Date: Fri, 4 Apr 2014 18:36:42 +0200
-Subject: [PATCH] Add Nukkit Class and Configuration
-
----
- src/main/java/fr/ribesg/nukkit/Nukkit.java         | 120 +++++++++++++++++++++
- .../java/org/bukkit/craftbukkit/CraftServer.java   |   4 +-
- 2 files changed, 123 insertions(+), 1 deletion(-)
- create mode 100644 src/main/java/fr/ribesg/nukkit/Nukkit.java
+Date: Fri, 4 Apr 2014 20:12:49 +0200
+Subject: [PATCH] Add Nukkit Class and Configuration.
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 new file mode 100644
-index 0000000..f06b0b9
+index 0000000..ecccbb6
 --- /dev/null
 +++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,125 @@
 +package fr.ribesg.nukkit;
 +
 +import org.bukkit.configuration.InvalidConfigurationException;
@@ -22,7 +16,6 @@ index 0000000..f06b0b9
 +import org.bukkit.craftbukkit.CraftServer;
 +
 +import java.io.*;
-+import java.nio.file.Paths;
 +import java.util.Scanner;
 +import java.util.logging.Level;
 +
@@ -37,7 +30,6 @@ index 0000000..f06b0b9
 +     * Configuration values  *
 +     * * * * * * * * * * * * */
 +
-+
 +    /* * * * * * * * * *
 +     * Static methods  *
 +     * * * * * * * * * */
@@ -48,7 +40,7 @@ index 0000000..f06b0b9
 +     * @param server the CraftServer
 +     */
 +    public static void init(final CraftServer server) {
-+        Nukkit.instance = new Nukkit(server);
++        instance = new Nukkit(server);
 +    }
 +
 +    /* * * * * * * *
@@ -69,7 +61,8 @@ index 0000000..f06b0b9
 +        this.server = server;
 +
 +        final File bukkitConfigFile = server.getConfigFile();
-+        final File nukkitConfigFile = Paths.get(bukkitConfigFile.getParentFile().getPath(), "nukkit.yml").toFile();
++        final String pathPrefix = bukkitConfigFile.getParentFile() == null ? "" : bukkitConfigFile.getParentFile().getPath() + File.pathSeparatorChar;
++        final File nukkitConfigFile = new File(pathPrefix + "nukkit.yml");
 +        if (!nukkitConfigFile.exists()) {
 +            createConfig(nukkitConfigFile);
 +        } else {
@@ -80,7 +73,7 @@ index 0000000..f06b0b9
 +    /**
 +     * Creates and populate the nukkit.yml file.
 +     *
-+     * @param nukkitConfigFile
++     * @param nukkitConfigFile the nukkit.yml file
 +     */
 +    private void createConfig(final File nukkitConfigFile) {
 +        // Set default values
@@ -94,10 +87,10 @@ index 0000000..f06b0b9
 +                writer.write(getConfigString());
 +                writer.flush();
 +                writer.close();
-+                server.getLogger().info("Nukkit config not found, created default nukkit.yml");
++                this.server.getLogger().info("Nukkit config not found, created default nukkit.yml");
 +            }
 +        } catch (final IOException e) {
-+            server.getLogger().log(Level.SEVERE, "Unable to create nukkit.yml!", e);
++            this.server.getLogger().log(Level.SEVERE, "Unable to create nukkit.yml!", e);
 +        }
 +    }
 +
@@ -109,11 +102,17 @@ index 0000000..f06b0b9
 +    private String getConfigString() {
 +        final StringBuilder builder = new StringBuilder();
 +
++        // Header
 +        builder.append("# Nukkit configuration file\n\n");
 +
 +        return builder.toString();
 +    }
 +
++    /**
++      * Loads the configuration from the nukkit.yml file.
++      *
++      * @param nukkitConfigFile the nukkit.yml file
++      */
 +    private void loadConfig(final File nukkitConfigFile) {
 +        final YamlConfiguration config = new YamlConfiguration();
 +
@@ -126,9 +125,9 @@ index 0000000..f06b0b9
 +                config.loadFromString(content);
 +            }
 +        } catch (final FileNotFoundException e) {
-+            server.getLogger().log(Level.SEVERE, "nukkit.yml should exist but was not found", e);
++            this.server.getLogger().log(Level.SEVERE, "nukkit.yml should exist but was not found", e);
 +        } catch (final InvalidConfigurationException e) {
-+            server.getLogger().log(Level.SEVERE, "nukkit.yml is not valid", e);
++            this.server.getLogger().log(Level.SEVERE, "nukkit.yml is not valid", e);
 +        }
 +
 +        // Set config values
@@ -158,5 +157,3 @@ index 30389a9..861744c 100644
      }
  
 -- 
-1.8.3.msysgit.0
-
