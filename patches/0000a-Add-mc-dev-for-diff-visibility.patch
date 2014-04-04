@@ -1,7 +1,7 @@
 From 2ba38a27fdf66e9df5e015c3471122005c0ee587 Mon Sep 17 00:00:00 2001
 From: Ribesg <ribesg@yahoo.fr>
-Date: Thu, 3 Apr 2014 00:00:00 +0200
-Subject: [PATCH] Add PacketPlayOutMapChunk.java for diff visibility.
+Date: Thu, 4 Apr 2014 19:00:00 +0200
+Subject: [PATCH] Add mc-dev files for diff visibility.
 
 
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java

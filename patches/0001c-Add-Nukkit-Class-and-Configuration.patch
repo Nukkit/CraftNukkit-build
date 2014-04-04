@@ -1,0 +1,162 @@
+From 538c27ef83afc54f2c65fc405a33e6eef1889d6b Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Fri, 4 Apr 2014 18:36:42 +0200
+Subject: [PATCH] Add Nukkit Class and Configuration
+
+---
+ src/main/java/fr/ribesg/nukkit/Nukkit.java         | 120 +++++++++++++++++++++
+ .../java/org/bukkit/craftbukkit/CraftServer.java   |   4 +-
+ 2 files changed, 123 insertions(+), 1 deletion(-)
+ create mode 100644 src/main/java/fr/ribesg/nukkit/Nukkit.java
+
+diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+new file mode 100644
+index 0000000..f06b0b9
+--- /dev/null
++++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+@@ -0,0 +1,120 @@
++package fr.ribesg.nukkit;
++
++import org.bukkit.configuration.InvalidConfigurationException;
++import org.bukkit.configuration.file.YamlConfiguration;
++import org.bukkit.craftbukkit.CraftServer;
++
++import java.io.*;
++import java.nio.file.Paths;
++import java.util.Scanner;
++import java.util.logging.Level;
++
++public class Nukkit {
++
++    /**
++     * Nukkit instance
++     */
++    private static Nukkit instance;
++
++    /* * * * * * * * * * * * *
++     * Configuration values  *
++     * * * * * * * * * * * * */
++
++
++    /* * * * * * * * * *
++     * Static methods  *
++     * * * * * * * * * */
++
++    /**
++     * Creates the instance of Nukkit.
++     *
++     * @param server the CraftServer
++     */
++    public static void init(final CraftServer server) {
++        Nukkit.instance = new Nukkit(server);
++    }
++
++    /* * * * * * * *
++     * Non-statics *
++     * * * * * * * */
++
++    /**
++     * The CraftServer
++     */
++    private final CraftServer server;
++
++    /**
++     * Nukkit constructor.
++     *
++     * @param server the CraftServer
++     */
++    private Nukkit(final CraftServer server) {
++        this.server = server;
++
++        final File bukkitConfigFile = server.getConfigFile();
++        final File nukkitConfigFile = Paths.get(bukkitConfigFile.getParentFile().getPath(), "nukkit.yml").toFile();
++        if (!nukkitConfigFile.exists()) {
++            createConfig(nukkitConfigFile);
++        } else {
++            loadConfig(nukkitConfigFile);
++        }
++    }
++
++    /**
++     * Creates and populate the nukkit.yml file.
++     *
++     * @param nukkitConfigFile
++     */
++    private void createConfig(final File nukkitConfigFile) {
++        // Set default values
++
++        // Write file
++        try {
++            if (!nukkitConfigFile.createNewFile()) {
++                throw new IllegalStateException("nukkit.yml shouldn't exist but was found");
++            } else {
++                final Writer writer = new FileWriter(nukkitConfigFile);
++                writer.write(getConfigString());
++                writer.flush();
++                writer.close();
++                server.getLogger().info("Nukkit config not found, created default nukkit.yml");
++            }
++        } catch (final IOException e) {
++            server.getLogger().log(Level.SEVERE, "Unable to create nukkit.yml!", e);
++        }
++    }
++
++    /**
++     * Creates the String which will be written as the Configuration content.
++     *
++     * @return the Configuration content
++     */
++    private String getConfigString() {
++        final StringBuilder builder = new StringBuilder();
++
++        builder.append("# Nukkit configuration file\n\n");
++
++        return builder.toString();
++    }
++
++    private void loadConfig(final File nukkitConfigFile) {
++        final YamlConfiguration config = new YamlConfiguration();
++
++        // Read file
++        try {
++            if (!nukkitConfigFile.exists()) {
++                throw new IllegalStateException("nukkit.yml should exist but was not found");
++            } else {
++                final String content = new Scanner(nukkitConfigFile).useDelimiter("\\Z").next();
++                config.loadFromString(content);
++            }
++        } catch (final FileNotFoundException e) {
++            server.getLogger().log(Level.SEVERE, "nukkit.yml should exist but was not found", e);
++        } catch (final InvalidConfigurationException e) {
++            server.getLogger().log(Level.SEVERE, "nukkit.yml is not valid", e);
++        }
++
++        // Set config values
++    }
++
++}
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 30389a9..861744c 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -254,6 +254,8 @@ public final class CraftServer implements Server {
+             getLogger().info("Console input is disabled due to --noconsole command argument");
+         }
+ 
++        fr.ribesg.nukkit.Nukkit.init(this); // Nukkit
++
+         configuration = YamlConfiguration.loadConfiguration(getConfigFile());
+         configuration.options().copyDefaults(true);
+         configuration.setDefaults(YamlConfiguration.loadConfiguration(getClass().getClassLoader().getResourceAsStream("configurations/bukkit.yml")));
+@@ -317,7 +319,7 @@ public final class CraftServer implements Server {
+         return overrideAllCommandBlockCommands || commandsConfiguration.getStringList("command-block-overrides").contains(command);
+     }
+ 
+-    private File getConfigFile() {
++    public File getConfigFile() { // Nukkit: private -> public
+         return (File) console.options.valueOf("bukkit-settings");
+     }
+ 
+-- 
+1.8.3.msysgit.0
+
