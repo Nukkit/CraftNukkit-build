@@ -78,7 +78,7 @@ index 124642b..f87a3a2 100644
 +
 +        // Orebfuscator - Replacing blocks
 +        builder.append("# List of block ids which will replace hidden ones:\n");
-+        builder.append("replacedBlocks:\n");
++        builder.append("replacedWith:\n");
 +        for (byte id : this.replacedWith) {
 +            builder.append("- ").append(0xFF & id).append('\n');
 +        }
