@@ -1,0 +1,19 @@
+From 3976c0d9dc87225c8cece4348e69bb8e267aa3e3 Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Sun, 6 Apr 2014 21:31:35 +0200
+Subject: [PATCH] Hopper cooldown
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index 730eb78..22467df 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -188,6 +188,8 @@ public class TileEntityHopper extends TileEntity implements IHopper {
+                 }
+             }
+ 
++	        if (!this.j()) this.c(8); // Nukkit
++
+             return false;
+         } else {
+             return false;
+-- 
