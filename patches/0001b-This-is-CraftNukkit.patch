@@ -1,4 +1,4 @@
-From 0e4356c9c6c78231c08ed3410998d5e31411e332 Mon Sep 17 00:00:00 2001
+From cd809c2b04f9eb3c69013c73d444b6fd44d53de4 Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:09:10 +0200
 Subject: [PATCH] This is CraftNukkit.
@@ -43,7 +43,7 @@ index cda766b..4f3686f 100644
 +I decided to just make my own simple fork. I don't know what I will add to it.
 +There's no plan, and there's no support. CraftNukkit is under GPLv3.
 diff --git a/pom.xml b/pom.xml
-index ab24e56..c7710f6 100644
+index ab24e56..2dc921f 100644
 --- a/pom.xml
 +++ b/pom.xml
 @@ -1,12 +1,12 @@
@@ -63,7 +63,13 @@ index ab24e56..c7710f6 100644
  
    <properties>
      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-@@ -19,24 +19,11 @@
+@@ -14,29 +14,16 @@
+     <junit.version>4.11</junit.version>
+     <minecraft.version>1.7.2</minecraft.version>
+     <minecraft_version>1_7_R1</minecraft_version>
+-    <buildtag.prefix>git-Bukkit-</buildtag.prefix>
++    <buildtag.prefix>git-Nukkit-</buildtag.prefix>
+     <buildtag.suffix></buildtag.suffix>
    </properties>
  
    <scm>
