@@ -2,8 +2,10 @@ From 0a228ac7221d791110f11b6800e0990a2ee6d699 Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:14:32 +0200
 Subject: [PATCH] Add Orebfuscator by lishid.
-* Configurable hidden blocks
-* Configurable replacement blocks
+
+https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0065-Orebfuscator.patch
+- Configurable hidden blocks
+- Configurable replacement blocks
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 index 124642b..f87a3a2 100644
