@@ -1,7 +1,11 @@
 From 44bb1b6c8ec23039634422a22b29fd82aed9e94b Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:12:49 +0200
-Subject: [PATCH] Add Nukkit Class and Configuration.
+Subject: [PATCH] Add Nukkit class and configuration.
+
+Modified files:
+- src/main/java/fr/ribesg/nukkit/Nukkit.java
+- src/main/java/org/bukkit/craftbukkit/CraftServer.java
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 new file mode 100644
@@ -24,7 +28,7 @@ index 0000000..ecccbb6
 +    /**
 +     * Nukkit instance
 +     */
-+    private static Nukkit instance;
++    public static Nukkit instance;
 +
 +    /* * * * * * * * * * * * *
 +     * Configuration values  *

@@ -7,6 +7,11 @@ Subject: [PATCH] Add mc-dev files for diff visibility.
 - NibbleArray
 - OldChunkLoader
 
+Modified files:
+- src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+- src/main/java/net/minecraft/server/NibbleArray.java
+- src/main/java/net/minecraft/server/OldChunkLoader.java
+
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 new file mode 100644
 index 0000000..4f64207

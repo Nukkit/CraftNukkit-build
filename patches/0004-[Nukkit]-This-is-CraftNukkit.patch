@@ -2,9 +2,15 @@ From cd809c2b04f9eb3c69013c73d444b6fd44d53de4 Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:09:10 +0200
 Subject: [PATCH] This is CraftNukkit.
-* Edit README.md
-* Edit pom.xml
-* Change name of Server implementation
+
+- Edit README.md
+- Edit pom.xml
+- Change name of Server implementation
+
+Modified files:
+- README.md
+- pom.xml
+- src/main/java/org/bukkit/craftbukkit/CraftServer.java
 
 diff --git a/README.md b/README.md
 index cda766b..4f3686f 100644

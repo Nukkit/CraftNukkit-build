@@ -6,6 +6,10 @@ Subject: [PATCH] Reduce Chunk compression.
 https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0041-Lower-Chunk-Compression.patch
 - Increase Bandwidth usage a bit to reduce CPU usage a bit
 
+Modified files:
+- src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+- src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
+
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 index 5474f4a..aa5ec46 100644
 --- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java

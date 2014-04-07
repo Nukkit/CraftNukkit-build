@@ -1,18 +1,26 @@
 From 0a13c4fb7028e62e617345314f93e3c2f06e4971 Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
 Date: Sun, 7 Apr 2014 11:57:35 +0200
-Subject: [PATCH] Compressed Nibble Arrays
+Subject: [PATCH] Compressed nibble arrays.
 
 https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0012-Compressed-Nibble-Arrays.patch
 - Implement 'lightening' of NibbleArrays - only allocate buffers when non-trivial value Saving from 40-45% of memory use by chunk section data.
 - Finish up NibbleArray lightening work - use for Snapshots, reduce copies
 - Fix nibble handling with NBT - arrays aren't copied by NBTByteArray
 
+Modified files:
+- src/main/java/net/minecraft/server/ChunkRegionLoader.java
+- src/main/java/net/minecraft/server/ChunkSection.java
+- src/main/java/net/minecraft/server/NibbleArray.java
+- src/main/java/net/minecraft/server/OldChunkLoader.java
+- src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+- src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+
 diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
-index 1e1499e..76b081a 100644
+index d5cf88d..4dd0bcc 100644
 --- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
 +++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
-@@ -225,15 +225,15 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+@@ -232,15 +232,15 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
                  nbttagcompound1.setByte("Y", (byte) (chunksection.getYPosition() >> 4 & 255));
                  nbttagcompound1.setByteArray("Blocks", chunksection.getIdArray());
                  if (chunksection.getExtendedIdArray() != null) {
@@ -34,7 +42,7 @@ index 1e1499e..76b081a 100644
  
                  nbttaglist.add(nbttagcompound1);
 diff --git a/src/main/java/net/minecraft/server/ChunkSection.java b/src/main/java/net/minecraft/server/ChunkSection.java
-index a05efa0..360de1a 100644
+index a05efa0..2d860ee 100644
 --- a/src/main/java/net/minecraft/server/ChunkSection.java
 +++ b/src/main/java/net/minecraft/server/ChunkSection.java
 @@ -140,7 +140,8 @@ public class ChunkSection {
@@ -94,7 +102,7 @@ index a05efa0..360de1a 100644
          return nibbleArray;
      }
 diff --git a/src/main/java/net/minecraft/server/NibbleArray.java b/src/main/java/net/minecraft/server/NibbleArray.java
-index 5d75a54..c9bc20c 100644
+index 5d75a54..fa9d7c7 100644
 --- a/src/main/java/net/minecraft/server/NibbleArray.java
 +++ b/src/main/java/net/minecraft/server/NibbleArray.java
 @@ -1,13 +1,117 @@
@@ -105,7 +113,7 @@ index 5d75a54..c9bc20c 100644
  public class NibbleArray {
  
 -    public final byte[] a;
-+    private byte[] a; // Nukkit - remove final, make private (anyone directly accessing this is broken already)
++    private byte[] a; // Nukkit: public final -> private
      private final int b;
      private final int c;
 +    // Nukkit start
@@ -249,7 +257,7 @@ index 5d75a54..c9bc20c 100644
          int j1 = i1 >> 1;
          int k1 = i1 & 1;
 diff --git a/src/main/java/net/minecraft/server/OldChunkLoader.java b/src/main/java/net/minecraft/server/OldChunkLoader.java
-index fcb9912..6ee28cc 100644
+index fcb9912..f35ee7f 100644
 --- a/src/main/java/net/minecraft/server/OldChunkLoader.java
 +++ b/src/main/java/net/minecraft/server/OldChunkLoader.java
 @@ -94,9 +94,11 @@ public class OldChunkLoader {
@@ -268,7 +276,7 @@ index fcb9912..6ee28cc 100644
              }
          }
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-index c7b799a..856e825 100644
+index aa5ec46..bddccdb 100644
 --- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 +++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 @@ -139,16 +139,16 @@ public class PacketPlayOutMapChunk extends Packet {
@@ -315,10 +323,10 @@ index c7b799a..856e825 100644
              }
          }
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
-index b2c6ef4..55f5225 100644
+index b2c6ef4..3c15413 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftChunk.java
-@@ -174,7 +174,18 @@ public class CraftChunk implements Chunk {
+@@ -174,33 +174,65 @@ public class CraftChunk implements Chunk {
                  }
  
                  if (cs[i].getExtendedIdArray() != null) { /* If we've got extended IDs */
@@ -332,16 +340,28 @@ index b2c6ef4..55f5225 100644
 +                                blockids[j] |= tval;
 +                            }
 +                        }
-+                  } else {
-+                    byte[] extids = cs[i].getExtendedIdArray().getValueArray();
-+                    // Nukkit end
++                    } else {
++                        byte[] extids = cs[i].getExtendedIdArray().getValueArray();
++                        // Nukkit end
  
-                     for (int j = 0; j < 2048; j++) {
-                         short b = (short) (extids[j] & 0xFF);
-@@ -186,21 +197,42 @@ public class CraftChunk implements Chunk {
-                         blockids[j<<1] |= (b & 0x0F) << 8;
-                         blockids[(j<<1)+1] |= (b & 0xF0) << 4;
-                     }
+-                    for (int j = 0; j < 2048; j++) {
+-                        short b = (short) (extids[j] & 0xFF);
++                        for (int j = 0; j < 2048; j++) { // Nukkit start: indentation
++                            short b = (short) (extids[j] & 0xFF);
+ 
+-                        if (b == 0) {
+-                            continue;
+-                        }
++                            if (b == 0) {
++                                continue;
++                            }
+ 
+-                        blockids[j<<1] |= (b & 0x0F) << 8;
+-                        blockids[(j<<1)+1] |= (b & 0xF0) << 4;
+-                    }
++                            blockids[j<<1] |= (b & 0x0F) << 8;
++                            blockids[(j<<1)+1] |= (b & 0xF0) << 4;
++                        } // Nukkit end: indentation
 +                    } // Nukkit
                  }
  

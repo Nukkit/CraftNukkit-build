@@ -7,6 +7,15 @@ https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0065-Orebfusc
 - Configurable hidden blocks
 - Configurable replacement blocks
 
+Modified files:
+- src/main/java/fr/ribesg/nukkit/Nukkit.java
+- src/main/java/fr/ribesg/nukkit/Orebfuscator.java
+- src/main/java/net/minecraft/server/EntityFallingBlock.java
+- src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+- src/main/java/net/minecraft/server/PacketPlayOutMapChunkBulk.java
+- src/main/java/net/minecraft/server/PlayerInteractManager.java
+- src/main/java/net/minecraft/server/World.java
+
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 index 124642b..f87a3a2 100644
 --- a/src/main/java/fr/ribesg/nukkit/Nukkit.java
