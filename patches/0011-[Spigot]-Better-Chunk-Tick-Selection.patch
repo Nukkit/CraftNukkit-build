@@ -1,0 +1,183 @@
+From 8fe65d8a9c999b2ebca1f63634de6a03d83d2f39 Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Sun, 7 Apr 2014 12:35:52 +0200
+Subject: [PATCH] Better Chunk Tick Selection
+
+https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0005-Better-Chunk-Tick-Selection.patch
+
+diff -git a/pom.xml b/pom.xml
+--- a/pom.xml
++++ b/pom.xml
+@@ -121,6 +121,11 @@
+         <version>2.3</version>
+         <scope>provided</scope>
+     </dependency>
++    <dependency>
++      <groupId>net.sf.trove4j</groupId>
++      <artifactId>trove4j</artifactId>
++      <version>3.0.3</version>
++    </dependency>
+     <!-- testing -->
+     <dependency>
+       <groupId>junit</groupId>
+diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
+index 5f12d2e..069db6a 100644
+--- a/src/main/java/net/minecraft/server/World.java
++++ b/src/main/java/net/minecraft/server/World.java
+@@ -61,7 +61,7 @@ public abstract class World implements IBlockAccess {
+     public Scoreboard scoreboard = new Scoreboard(); // CraftBukkit - protected -> public
+     public boolean isStatic;
+     // CraftBukkit start - public, longhashset
+-    protected LongHashSet chunkTickList = new LongHashSet();
++    // protected LongHashSet chunkTickList = new LongHashSet(); // Nukkit
+     private int L;
+     public boolean allowMonsters;
+     public boolean allowAnimals;
+@@ -76,6 +76,30 @@ public abstract class World implements IBlockAccess {
+     private boolean N;
+     int[] I;
+ 
++    // Nukkit start
++    protected final gnu.trove.map.hash.TLongShortHashMap chunkTickList;
++    protected float growthOdds = 100;
++    protected float modifiedOdds = 100;
++    private final byte chunkTickRadius;
++
++    public static long chunkToKey(int x, int z)
++    {
++        long k = ( ( ( (long) x ) & 0xFFFF0000L ) << 16 ) | ( ( ( (long) x ) & 0x0000FFFFL ) << 0 );
++        k     |= ( ( ( (long) z ) & 0xFFFF0000L ) << 32 ) | ( ( ( (long) z ) & 0x0000FFFFL ) << 16 );
++        return k;
++    }
++
++    public static int keyToX(long k)
++    {
++        return (int) ( ( ( k >> 16 ) & 0xFFFF0000 ) | ( k & 0x0000FFFF ) );
++    }
++
++    public static int keyToZ(long k)
++    {
++        return (int) ( ( ( k >> 32 ) & 0xFFFF0000L ) | ( ( k >> 16 ) & 0x0000FFFF ) );
++    }
++    // Nukkit end
++
+     public BiomeBase getBiome(int i, int j) {
+         if (this.isLoaded(i, 0, j)) {
+             Chunk chunk = this.getChunkAtWorldCoords(i, j);
+@@ -125,6 +149,11 @@ public abstract class World implements IBlockAccess {
+         this.ticksPerAnimalSpawns = this.getServer().getTicksPerAnimalSpawns(); // CraftBukkit
+         this.ticksPerMonsterSpawns = this.getServer().getTicksPerMonsterSpawns(); // CraftBukkit
+         // CraftBukkit end
++        // Nukkit start
++        this.chunkTickRadius = (byte) ( ( this.getServer().getViewDistance() < 7 ) ? this.getServer().getViewDistance() : 7 );
++        this.chunkTickList = new gnu.trove.map.hash.TLongShortHashMap( 650 /* TODO */ * 5, 0.7f, Long.MIN_VALUE, Short.MIN_VALUE );
++        this.chunkTickList.setAutoCompactionFactor( 0 );
++        // Nukkit end
+ 
+         this.L = this.random.nextInt(12000);
+         this.allowMonsters = true;
+@@ -1913,24 +1942,44 @@ public abstract class World implements IBlockAccess {
+         int j;
+         int k;
+ 
++        // Nukkit start
++        int optimalChunks = 650 /* TODO */;
++        // Quick conditions to allow us to exist early
++        if ( optimalChunks <= 0 || players.isEmpty() )
++        {
++            return;
++        }
++        // Keep chunks with growth inside of the optimal chunk range
++        int chunksPerPlayer = Math.min( 200, Math.max( 1, (int) ( ( ( optimalChunks - players.size() ) / (double) players.size() ) + 0.5 ) ) );
++        int randRange = 3 + chunksPerPlayer / 30;
++        // Limit to normal tick radius - including view distance
++        randRange = ( randRange > chunkTickRadius ) ? chunkTickRadius : randRange;
++        // odds of growth happening vs growth happening in vanilla
++        this.growthOdds = this.modifiedOdds = Math.max( 35, Math.min( 100, ( ( chunksPerPlayer + 1 ) * 100F ) / 15F ) );
++        // Nukkit end
+         for (i = 0; i < this.players.size(); ++i) {
+             entityhuman = (EntityHuman) this.players.get(i);
+             j = MathHelper.floor(entityhuman.locX / 16.0D);
+             k = MathHelper.floor(entityhuman.locZ / 16.0D);
+             byte b0 = 7;
+ 
+-            for (int l = -b0; l <= b0; ++l) {
+-                for (int i1 = -b0; i1 <= b0; ++i1) {
+-                    // CraftBukkit start - Don't tick chunks queued for unload
+-                    ChunkProviderServer chunkProviderServer = ((WorldServer) entityhuman.world).chunkProviderServer;
+-                    if (chunkProviderServer.unloadQueue.contains(l + j, i1 + k)) {
+-                        continue;
+-                    }
+-                    // CraftBukkit end
+-
+-                    this.chunkTickList.add(org.bukkit.craftbukkit.util.LongHash.toLong(l + j, i1 + k)); // CraftBukkit
++            // Nukkit start - Always update the chunk the player is on
++            long key = chunkToKey( j, k );
++            int existingPlayers = Math.max( 0, chunkTickList.get( key ) ); // filter out -1
++            chunkTickList.put(key, (short) (existingPlayers + 1));
++
++            // Check and see if we update the chunks surrounding the player this tick
++            for ( int chunk = 0; chunk < chunksPerPlayer; chunk++ )
++            {
++                int dx = ( random.nextBoolean() ? 1 : -1 ) * random.nextInt( randRange );
++                int dz = ( random.nextBoolean() ? 1 : -1 ) * random.nextInt( randRange );
++                long hash = chunkToKey( dx + j, dz + k );
++                if ( !chunkTickList.contains( hash ) && this.isChunkLoaded( dx + j, dz + k ) )
++                {
++                    chunkTickList.put( hash, (short) -1 ); // no players
+                 }
+             }
++            // Nukkit End
+         }
+ 
+         this.methodProfiler.b();
+diff --git a/src/main/java/net/minecraft/server/WorldServer.java b/src/main/java/net/minecraft/server/WorldServer.java
+index 4e0861e..acb0be1 100644
+--- a/src/main/java/net/minecraft/server/WorldServer.java
++++ b/src/main/java/net/minecraft/server/WorldServer.java
+@@ -306,10 +306,20 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
+         // CraftBukkit start
+         // Iterator iterator = this.chunkTickList.iterator();
+ 
+-        for (long chunkCoord : this.chunkTickList.popAll()) {
++        // Nukkit start
++        for (gnu.trove.iterator.TLongShortIterator iter = chunkTickList.iterator(); iter.hasNext();) {
++            iter.advance();
++            long chunkCoord = iter.key();
++            int chunkX = World.keyToX(chunkCoord);
++            int chunkZ = World.keyToZ(chunkCoord);
++            // If unloaded, or in procedd of being unloaded, drop it
++            if ( ( !this.isChunkLoaded( chunkX, chunkZ ) ) || ( this.chunkProviderServer.unloadQueue.contains( chunkX, chunkZ ) ) )
++            {
++                iter.remove();
++                continue;
++            }
++            // Nukkit end
+             // ChunkCoordIntPair chunkcoordintpair = (ChunkCoordIntPair) iterator.next();
+-            int chunkX = LongHash.msw(chunkCoord);
+-            int chunkZ = LongHash.lsw(chunkCoord);
+             int k = chunkX * 16;
+             int l = chunkZ * 16;
+ 
+@@ -400,6 +410,7 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
+ 
+                         if (block.isTicking()) {
+                             ++i;
++                            this.growthOdds = (iter.value() < 1) ? this.modifiedOdds : 100; // Nukkit - grow fast if no players are in this chunk (value = player count)
+                             block.a(this, k2 + k, i3 + chunksection.getYPosition(), l2 + l, this.random);
+                         }
+                     }
+@@ -408,6 +419,12 @@ public class WorldServer extends World implements org.bukkit.BlockChangeDelegate
+ 
+             this.methodProfiler.b();
+         }
++        // Nukkit Start
++        if ( false /* TODO Nukkit Config */ )
++        {
++            chunkTickList.clear();
++        }
++        // Nukkit End
+     }
+ 
+     public boolean a(int i, int j, int k, Block block) {
+-- 

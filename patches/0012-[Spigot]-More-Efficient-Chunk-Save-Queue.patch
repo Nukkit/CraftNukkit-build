@@ -1,0 +1,99 @@
+From 7411c0dc59ef739de9b28c5d526962c65f39692c Mon Sep 17 00:00:00 2001
+From: Ribesg <Ribesg@yahoo.fr>
+Date: Sun, 7 Apr 2014 13:05:32 +0200
+Subject: [PATCH] More Efficient Chunk Save Queue
+
+https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0007-More-Efficient-Chunk-Save-Queue.patch
+
+diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+index d5cf88d..1e1499e 100644
+--- a/src/main/java/net/minecraft/server/ChunkRegionLoader.java
++++ b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
+@@ -16,6 +16,7 @@ import org.apache.logging.log4j.Logger;
+ 
+ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+ 
++    private java.util.LinkedHashMap<ChunkCoordIntPair, PendingChunkToSave> pendingSaves = new java.util.LinkedHashMap<ChunkCoordIntPair, PendingChunkToSave>(); // Nukkit
+     private static final Logger a = LogManager.getLogger();
+     private List b = new ArrayList();
+     private Set c = new HashSet();
+@@ -31,13 +32,11 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         ChunkCoordIntPair chunkcoordintpair = new ChunkCoordIntPair(i, j);
+ 
+         synchronized (this.d) {
+-            if (this.c.contains(chunkcoordintpair)) {
+-                for (int k = 0; k < this.b.size(); ++k) {
+-                    if (((PendingChunkToSave) this.b.get(k)).a.equals(chunkcoordintpair)) {
+-                        return true;
+-                    }
+-                }
+-            }
++            // Nukkit start
++            if (pendingSaves.containsKey(chunkcoordintpair)) {
++                return true;
++             }
++            // Nukkit end
+         }
+ 
+         return RegionFileCache.a(this.e, i, j).chunkExists(i & 31, j & 31);
+@@ -64,14 +63,12 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         Object object = this.d;
+ 
+         synchronized (this.d) {
+-            if (this.c.contains(chunkcoordintpair)) {
+-                for (int k = 0; k < this.b.size(); ++k) {
+-                    if (((PendingChunkToSave) this.b.get(k)).a.equals(chunkcoordintpair)) {
+-                        nbttagcompound = ((PendingChunkToSave) this.b.get(k)).b;
+-                        break;
+-                    }
+-                }
++            // Nukkit start
++            PendingChunkToSave pendingchunktosave = pendingSaves.get(chunkcoordintpair);
++            if (pendingchunktosave != null) {
++                nbttagcompound = pendingchunktosave.b;
+             }
++            // Nukkit end
+         }
+ 
+         if (nbttagcompound == null) {
+@@ -151,17 +148,11 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         Object object = this.d;
+ 
+         synchronized (this.d) {
+-            if (this.c.contains(chunkcoordintpair)) {
+-                for (int i = 0; i < this.b.size(); ++i) {
+-                    if (((PendingChunkToSave) this.b.get(i)).a.equals(chunkcoordintpair)) {
+-                        this.b.set(i, new PendingChunkToSave(chunkcoordintpair, nbttagcompound));
+-                        return;
+-                    }
+-                }
++            // Nukkit start
++            if (this.pendingSaves.put(chunkcoordintpair, new PendingChunkToSave(chunkcoordintpair, nbttagcompound)) != null) {
++                return;
+             }
+-
+-            this.b.add(new PendingChunkToSave(chunkcoordintpair, nbttagcompound));
+-            this.c.add(chunkcoordintpair);
++            // Nukkit end
+             FileIOThread.a.a(this);
+         }
+     }
+@@ -171,12 +162,14 @@ public class ChunkRegionLoader implements IChunkLoader, IAsyncChunkSaver {
+         Object object = this.d;
+ 
+         synchronized (this.d) {
+-            if (this.b.isEmpty()) {
++            // Nukkit start
++            if (this.pendingSaves.isEmpty()) {
+                 return false;
+             }
+ 
+-            pendingchunktosave = (PendingChunkToSave) this.b.remove(0);
+-            this.c.remove(pendingchunktosave.a);
++            pendingchunktosave = this.pendingSaves.values().iterator().next();
++            this.pendingSaves.remove(pendingchunktosave.a);
++            // Nukkit end
+         }
+ 
+         if (pendingchunktosave != null) {
+-- 
