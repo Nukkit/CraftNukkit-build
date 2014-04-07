@@ -1,7 +1,7 @@
 From cd809c2b04f9eb3c69013c73d444b6fd44d53de4 Mon Sep 17 00:00:00 2001
 From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:09:10 +0200
-Subject: [PATCH] This is CraftNukkit.
+Subject: [PATCH] This is Nukkit.
 
 - Edit README.md
 - Edit pom.xml
@@ -22,7 +22,7 @@ index cda766b..4f3686f 100644
 +![Nukkit](http://www.ribesg.fr/images/nukkit.png)
  
 -A Bukkit (Minecraft Server API) implementation
-+CraftNukkit
++Nukkit
 +===========
  
 -Website: [http://bukkit.org](http://bukkit.org)  
@@ -47,7 +47,7 @@ index cda766b..4f3686f 100644
 -    * *Note*: this is not needed as the repository we use has Bukkit too, but you might have a newer one (with your own changes :D)
 -* Check out this repo and: `mvn clean package`
 +I decided to just make my own simple fork. I don't know what I will add to it.
-+There's no plan, and there's no support. CraftNukkit is under GPLv3.
++There's no plan, and there's no support. Nukkit is under GPLv3.
 diff --git a/pom.xml b/pom.xml
 index ab24e56..2dc921f 100644
 --- a/pom.xml
@@ -59,12 +59,12 @@ index ab24e56..2dc921f 100644
 -  <groupId>org.bukkit</groupId>
 -  <artifactId>craftbukkit</artifactId>
 +  <groupId>fr.ribesg.nukkit</groupId>
-+  <artifactId>craftnukkit</artifactId>
++  <artifactId>nukkit</artifactId>
    <packaging>jar</packaging>
    <version>1.7.2-R0.3</version>
 -  <name>CraftBukkit</name>
 -  <url>http://www.bukkit.org</url>
-+  <name>CraftNukkit</name>
++  <name>Nukkit</name>
 +  <url>http://www.ribesg.fr</url>
  
    <properties>
@@ -82,9 +82,9 @@ index ab24e56..2dc921f 100644
 -    <connection>scm:git:git://github.com/Bukkit/CraftBukkit.git</connection>
 -    <developerConnection>scm:git:ssh://git@github.com/Bukkit/CraftBukkit.git</developerConnection>
 -    <url>https://github.com/Bukkit/CraftBukkit</url>
-+    <connection>scm:git:git://github.com/Nukkit/CraftNukkit.git</connection>
-+    <developerConnection>scm:git:ssh://git@github.com/Nukkit/CraftNukkit.git</developerConnection>
-+    <url>https://github.com/Nukkit/CraftNukkit</url>
++    <connection>scm:git:git://github.com/Nukkit/Nukkit.git</connection>
++    <developerConnection>scm:git:ssh://git@github.com/Nukkit/Nukkit.git</developerConnection>
++    <url>https://github.com/Nukkit/Nukkit</url>
    </scm>
  
 -  <distributionManagement>
@@ -108,7 +108,7 @@ index ab24e56..2dc921f 100644
              <manifestEntries>
                <Main-Class>org.bukkit.craftbukkit.Main</Main-Class>
 -              <Implementation-Title>CraftBukkit</Implementation-Title>
-+              <Implementation-Title>CraftNukkit</Implementation-Title>
++              <Implementation-Title>Nukkit</Implementation-Title>
                <Implementation-Version>${describe}</Implementation-Version>
 -              <Implementation-Vendor>Bukkit Team</Implementation-Vendor>
 +              <Implementation-Vendor>Nukkit Team</Implementation-Vendor>
@@ -124,7 +124,7 @@ index e6c8575..30389a9 100644
  
  public final class CraftServer implements Server {
 -    private final String serverName = "CraftBukkit";
-+    private final String serverName = "CraftNukkit";
++    private final String serverName = "Nukkit";
      private final String serverVersion;
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");

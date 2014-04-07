@@ -17,6 +17,6 @@ git commit -m "Initial commit - CraftBukkit $TAG"
 # Patch CraftBukkit
 git am ../patches/*.patch
 
-# Push to https://github.com/Nukkit/CraftNukkit
-git remote add patched git@github.com:Nukkit/CraftNukkit.git
+# Push to https://github.com/Nukkit/Nukkit
+git remote add patched git@github.com:Nukkit/Nukkit.git
 git push patched master --force
