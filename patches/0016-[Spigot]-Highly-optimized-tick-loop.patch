@@ -1,0 +1,134 @@
+From 0e4528f834a8111276d33b09e27854def1214491 Mon Sep 17 00:00:00 2001
+From: Ribesg <ribesg@yahoo.fr>
+Date: Mon, 7 Apr 2014 15:48:05 +0200
+Subject: [PATCH] Highly optimized tick loop
+
+https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0095-Highly-Optimized-Tick-Loop.patch
+
+Modified files:
+- src/main/java/fr/ribesg/nukkit/Nukkit.java
+- src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java
+- src/main/java/net/minecraft/server/MinecraftServer.java
+
+diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+index a57f51b..1cb8130 100644
+--- a/src/main/java/fr/ribesg/nukkit/Nukkit.java
++++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+@@ -1,5 +1,6 @@
+ package fr.ribesg.nukkit;
+ 
++import fr.ribesg.nukkit.command.TicksPerSecondCommand;
+ import net.minecraft.server.Block;
+ import net.minecraft.util.gnu.trove.set.TByteSet;
+ import net.minecraft.util.gnu.trove.set.hash.TByteHashSet;
+@@ -55,6 +56,8 @@ public class Nukkit {
+     public static void init(final CraftServer server) {
+         instance = new Nukkit(server);
+ 
++        server.getCommandMap().register("tps", "Nukkit", new TicksPerSecondCommand());
++
+         Orebfuscator.init(instance.replacedBlocks, instance.replacedWith);
+     }
+ 
+diff --git a/src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java b/src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java
+new file mode 100644
+index 0000000..12f1674
+--- /dev/null
++++ b/src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java
+@@ -0,0 +1,32 @@
++package fr.ribesg.nukkit.command;
++
++import net.minecraft.server.MinecraftServer;
++import org.bukkit.ChatColor;
++import org.bukkit.command.Command;
++import org.bukkit.command.CommandSender;
++
++public class TicksPerSecondCommand extends Command {
++
++    public TicksPerSecondCommand() {
++        super("tps");
++        this.description = "Gets the current ticks per second for the server";
++        this.usageMessage = "/tps";
++        this.setPermission("nukkit.command.tps");
++    }
++
++    @Override
++    public boolean execute(final CommandSender sender, final String currentAlias, final String[] args) {
++        if (!testPermission(sender)) {
++            return true;
++        }
++
++        final double[] recentTps = MinecraftServer.getServer().recentTps;
++        sender.sendMessage(ChatColor.GOLD + "TPS from last 1m, 5m, 15m: " + recentTps[0] + ", " + recentTps[1] + ", " + recentTps[2]);
++        return true;
++    }
++
++    private String format(double tps) {
++        return ((tps > 18.0) ? ChatColor.GREEN : (tps > 16.0) ? ChatColor.YELLOW : ChatColor.RED).toString() +
++                ((tps > 20.0) ? "*" : "") + Math.min(Math.round(tps * 100.0) / 100.0, 20.0);
++    }
++}
+\ No newline at end of file
+diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
+index 6a01982..4fd63b2 100644
+--- a/src/main/java/net/minecraft/server/MinecraftServer.java
++++ b/src/main/java/net/minecraft/server/MinecraftServer.java
+@@ -102,6 +102,16 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
+     public int autosavePeriod;
+     // CraftBukkit end
+ 
++    // Nukkit start
++    private static final int TPS = 20;
++    private static final int TICK_TIME = 1000000000 / TPS;
++    private static final int SAMPLE_INTERVAL = 100;
++    public final double[] recentTps = new double[]{20, 20, 20};
++
++    private static double calcTps(final double avg, final double exp, final double tps) {
++        return avg * exp + tps * (1 - exp);
++    } // Nukkit end
++
+     public MinecraftServer(OptionSet options, Proxy proxy) { // CraftBukkit - signature file -> OptionSet
+         i = this;
+         this.c = proxy;
+@@ -429,7 +439,9 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
+                 this.p.setServerInfo(new ServerPingServerData("1.7.2", 4));
+                 this.a(this.p);
+ 
++                long lastTick = System.nanoTime(), catchupTime = 0, curTime, wait, tickSection = lastTick; // Nukkit
+                 while (this.isRunning) {
++                    /* // Nukkit
+                     long k = ap();
+                     long l = k - i;
+ 
+@@ -458,7 +470,29 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
+                         }
+                     }
+ 
+-                    Thread.sleep(1L);
++                    Thread.sleep(1L); */ // Nukkit start
++
++                    curTime = System.nanoTime();
++                    wait = TICK_TIME - (curTime - lastTick) - catchupTime;
++                    if (wait > 0) {
++                        Thread.sleep(wait / 1000000);
++                        catchupTime = 0;
++                        continue;
++                    } else {
++                        catchupTime = Math.min(1000000000, Math.abs(wait));
++                    }
++
++                    if (MinecraftServer.currentTick++ % SAMPLE_INTERVAL == 0) {
++                        double currentTps = 1E9 / (curTime - tickSection) * SAMPLE_INTERVAL;
++                        recentTps[0] = calcTps(recentTps[0], 0.9200, currentTps); // 1/exp(5s/1m)
++                        recentTps[1] = calcTps(recentTps[1], 0.9835, currentTps); // 1/exp(5s/5m)
++                        recentTps[2] = calcTps(recentTps[2], 0.9945, currentTps); // 1/exp(5s/15m)
++                        tickSection = curTime;
++                    }
++                    lastTick = curTime;
++
++                    this.t();
++                    // Nukkit end
+                     this.N = true;
+                 }
+             } else {
+-- 
