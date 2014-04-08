@@ -1,0 +1,77 @@
+From faafbd328712156c796413a02011413b74735cb4 Mon Sep 17 00:00:00 2001
+From: Ribesg <ribesg@yahoo.fr>
+Date: Tue, 8 Apr 2014 10:37:23 +0200
+Subject: [PATCH] Add optional tick shuffling
+
+https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0098-Add-Optional-Tick-Shuffling.patch
+- This prevents players from 'gaming' the server, and strategically relogging to increase their position in the tick order.
+
+Modified files:
+- src/main/java/fr/ribesg/nukkit/Nukkit.java
+- src/main/java/net/minecraft/server/ServerConnection.java
+
+diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+index 1cb8130..2eb0896 100644
+--- a/src/main/java/fr/ribesg/nukkit/Nukkit.java
++++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
+@@ -44,6 +44,11 @@ public class Nukkit {
+      */
+     public boolean clearTickList;
+ 
++    /**
++     * Player shuffling
++     */
++    public int playerShuffling;
++
+     /* * * * * * * * * *
+      * Static methods  *
+      * * * * * * * * * */
+@@ -105,6 +110,8 @@ public class Nukkit {
+ 
+         this.clearTickList = false;
+ 
++        this.playerShuffling = 0;
++
+         // Write file
+         try {
+             if (!nukkitConfigFile.createNewFile()) {
+@@ -158,6 +165,10 @@ public class Nukkit {
+         builder.append("# Clear tick list ?:\n");
+         builder.append("clearTickList: ").append(this.clearTickList).append('\n');
+ 
++        // Player shuffling
++        builder.append("# Player shuffling - prevents players from 'gaming' the server, and strategically relogging to increase their position in the tick order:\n");
++        builder.append("playerShuffling: ").append(this.playerShuffling).append('\n');
++
+         return builder.toString();
+     }
+ 
+@@ -218,6 +229,11 @@ public class Nukkit {
+         if (config.isBoolean("clearTickList")) {
+             this.clearTickList = config.getBoolean("clearTickList", this.clearTickList);
+         }
++
++        // Player shuffling
++        if (config.isInt("playerShuffling")) {
++            this.playerShuffling = config.getInt("playerShuffling", this.playerShuffling);
++        }
+     }
+ 
+ }
+diff --git a/src/main/java/net/minecraft/server/ServerConnection.java b/src/main/java/net/minecraft/server/ServerConnection.java
+index 406fd64..34b72d3 100644
+--- a/src/main/java/net/minecraft/server/ServerConnection.java
++++ b/src/main/java/net/minecraft/server/ServerConnection.java
+@@ -53,6 +53,11 @@ public class ServerConnection {
+         List list = this.f;
+ 
+         synchronized (this.f) {
++            // Nukkit start
++            if (fr.ribesg.nukkit.Nukkit.instance.playerShuffling > 0 && MinecraftServer.currentTick % fr.ribesg.nukkit.Nukkit.instance.playerShuffling == 0) {
++                Collections.shuffle(this.f);
++            }
++            // Nukkit end
+             Iterator iterator = this.f.iterator();
+ 
+             while (iterator.hasNext()) {
+-- 

@@ -1,4 +1,4 @@
-From 0e4528f834a8111276d33b09e27854def1214491 Mon Sep 17 00:00:00 2001
+From f27c45452a5e9b4b9fb1cf403c01e555f5ad28a1 Mon Sep 17 00:00:00 2001
 From: Ribesg <ribesg@yahoo.fr>
 Date: Mon, 7 Apr 2014 15:48:05 +0200
 Subject: [PATCH] Highly optimized tick loop
@@ -68,9 +68,8 @@ index 0000000..12f1674
 +                ((tps > 20.0) ? "*" : "") + Math.min(Math.round(tps * 100.0) / 100.0, 20.0);
 +    }
 +}
-\ No newline at end of file
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 6a01982..4fd63b2 100644
+index 6a01982..899e527 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -102,6 +102,16 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
@@ -90,23 +89,26 @@ index 6a01982..4fd63b2 100644
      public MinecraftServer(OptionSet options, Proxy proxy) { // CraftBukkit - signature file -> OptionSet
          i = this;
          this.c = proxy;
-@@ -429,7 +439,9 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
+@@ -429,36 +439,30 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                  this.p.setServerInfo(new ServerPingServerData("1.7.2", 4));
                  this.a(this.p);
  
-+                long lastTick = System.nanoTime(), catchupTime = 0, curTime, wait, tickSection = lastTick; // Nukkit
++                // Nukkit start
++                long lastTick = System.nanoTime(), catchupTime = 0, curTime, wait, tickSection = lastTick;
                  while (this.isRunning) {
-+                    /* // Nukkit
-                     long k = ap();
-                     long l = k - i;
- 
-@@ -458,7 +470,29 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
-                         }
-                     }
- 
--                    Thread.sleep(1L);
-+                    Thread.sleep(1L); */ // Nukkit start
-+
+-                    long k = ap();
+-                    long l = k - i;
+-
+-                    if (l > 2000L && i - this.O >= 15000L) {
+-                        if (this.server.getWarnOnOverload()) // CraftBukkit - Added option to suppress warning messages
+-                        h.warn("Can\'t keep up! Did the system time change, or is the server overloaded? Running {}ms behind, skipping {} tick(s)", new Object[] { Long.valueOf(l), Long.valueOf(l / 50L)});
+-                        l = 2000L;
+-                        this.O = i;
+-                    }
+-
+-                    if (l < 0L) {
+-                        h.warn("Time ran backwards! Did the system time change?");
+-                        l = 0L;
 +                    curTime = System.nanoTime();
 +                    wait = TICK_TIME - (curTime - lastTick) - catchupTime;
 +                    if (wait > 0) {
@@ -115,17 +117,29 @@ index 6a01982..4fd63b2 100644
 +                        continue;
 +                    } else {
 +                        catchupTime = Math.min(1000000000, Math.abs(wait));
-+                    }
-+
+                     }
+ 
+-                    j += l;
+-                    i = k;
+-                    if (this.worlds.get(0).everyoneDeeplySleeping()) { // CraftBukkit
+-                        this.t();
+-                        j = 0L;
+-                    } else {
+-                        while (j > 50L) {
+-                            MinecraftServer.currentTick = (int) (System.currentTimeMillis() / 50); // CraftBukkit
+-                            j -= 50L;
+-                            this.t();
+-                        }
 +                    if (MinecraftServer.currentTick++ % SAMPLE_INTERVAL == 0) {
 +                        double currentTps = 1E9 / (curTime - tickSection) * SAMPLE_INTERVAL;
 +                        recentTps[0] = calcTps(recentTps[0], 0.9200, currentTps); // 1/exp(5s/1m)
 +                        recentTps[1] = calcTps(recentTps[1], 0.9835, currentTps); // 1/exp(5s/5m)
 +                        recentTps[2] = calcTps(recentTps[2], 0.9945, currentTps); // 1/exp(5s/15m)
 +                        tickSection = curTime;
-+                    }
+                     }
 +                    lastTick = curTime;
-+
+ 
+-                    Thread.sleep(1L);
 +                    this.t();
 +                    // Nukkit end
                      this.N = true;
