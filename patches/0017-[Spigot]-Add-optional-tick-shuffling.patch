@@ -51,7 +51,7 @@ index 1cb8130..2eb0896 100644
              this.clearTickList = config.getBoolean("clearTickList", this.clearTickList);
          }
 +
-+        // Player shuffling
+         // Player shuffling
 +        if (config.isInt("playerShuffling")) {
 +            this.playerShuffling = config.getInt("playerShuffling", this.playerShuffling);
 +        }

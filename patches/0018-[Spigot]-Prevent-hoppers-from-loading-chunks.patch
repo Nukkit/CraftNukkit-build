@@ -1,0 +1,23 @@
+From 239a2ee4ddfea8bca2e1412f7f8e63dd4f08db4d Mon Sep 17 00:00:00 2001
+From: Ribesg <ribesg@yahoo.fr>
+Date: Tue, 8 Apr 2014 10:55:38 +0200
+Subject: [PATCH] Prevent hoppers from loading chunks
+
+https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0113-Prevent-hoppers-from-loading-chunks.patch
+
+Modified files:
+- src/main/java/net/minecraft/server/TileEntityHopper.java
+
+diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
+index 9c36b94..152fc78 100644
+--- a/src/main/java/net/minecraft/server/TileEntityHopper.java
++++ b/src/main/java/net/minecraft/server/TileEntityHopper.java
+@@ -439,6 +439,7 @@ public class TileEntityHopper extends TileEntity implements IHopper {
+         int i = MathHelper.floor(d0);
+         int j = MathHelper.floor(d1);
+         int k = MathHelper.floor(d2);
++        if (!world.isLoaded(i, j, k)) return null; // Nukkit
+         TileEntity tileentity = world.getTileEntity(i, j, k);
+ 
+         if (tileentity != null && tileentity instanceof IInventory) {
+-- 
