@@ -34,7 +34,7 @@ new file mode 100644
 index 0000000..e80b20b
 --- /dev/null
 +++ b/src/main/java/fr/ribesg/nukkit/command/HeapDumpCommand.java
-@@ -0,0 +1,109 @@
+@@ -0,0 +1,100 @@
 +package fr.ribesg.nukkit.command;
 +
 +import org.bukkit.ChatColor;
@@ -43,11 +43,8 @@ index 0000000..e80b20b
 +
 +import javax.management.MBeanServer;
 +import java.io.File;
-+import java.io.IOException;
 +import java.lang.management.ManagementFactory;
-+import java.lang.reflect.InvocationTargetException;
 +import java.lang.reflect.Method;
-+import java.security.AccessControlException;
 +import java.util.Arrays;
 +
 +/**
@@ -67,8 +64,7 @@ index 0000000..e80b20b
 +     * @param live     flag that tells whether to dump only the live objects
 +     */
 +    @SuppressWarnings("unchecked")
-+    private static void dumpHeap(final String fileName, final boolean live)
-+            throws ClassNotFoundException, IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
++    private static void dumpHeap(final String fileName, final boolean live) throws Exception {
 +        final Class clazz = Class.forName("com.sun.management.HotSpotDiagnosticMXBean");
 +
 +        // Initialize the HotSpot MBean if it isn't
@@ -115,16 +111,11 @@ index 0000000..e80b20b
 +            dumpHeap(fileName, !(args.length > 0 && "all".equalsIgnoreCase(args[0])));
 +            final long end = System.nanoTime();
 +            sender.sendMessage(ChatColor.GREEN + "Heap dumped in " + format(start, end));
-+        } catch (final ReflectiveOperationException e) {
-+            sender.sendMessage(ChatColor.RED + "The JDK on this server doesn't seem to support this!");
-+            throw new RuntimeException("Failed to dump heap", e);
-+        } catch (final AccessControlException e) {
-+            sender.sendMessage(ChatColor.RED + "The JVM this Minecraft server is running in doesn't allow this!");
-+            throw new RuntimeException("Failed to dump heap", e);
-+        } catch (final IOException e) {
++        } catch (final Exception e) {
++            sender.sendMessage(ChatColor.RED + "Failed to dump heap, see console for details");
 +            throw new RuntimeException("Failed to dump heap", e);
 +        }
-+        
++
 +        return true;
 +    }
 +
