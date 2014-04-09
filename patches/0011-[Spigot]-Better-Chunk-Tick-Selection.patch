@@ -67,11 +67,11 @@ index b016db7..49548a0 100644
  
 +        // ChunkTick - Chunks to grow per tick
 +        builder.append("# Number of chunks to grow per tick:\n");
-+        builder.append("chunksPerTick: ").append(this.chunksPerTick).append('\n');
++        builder.append("chunksPerTick: ").append(this.chunksPerTick).append("\n\n");
 +
 +        // ChunkTick - clear tick list
 +        builder.append("# Clear tick list ?:\n");
-+        builder.append("clearTickList: ").append(this.clearTickList).append('\n');
++        builder.append("clearTickList: ").append(this.clearTickList).append("\n\n");
 +
          return builder.toString();
      }
