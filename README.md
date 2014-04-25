@@ -1,6 +1,6 @@
 ![Nukkit](http://www.ribesg.fr/images/nukkit.png)
 
-CraftNukkit
+Nukkit
 ===========
 
 * Basically CraftBukkit with stuff
@@ -15,4 +15,4 @@ I'm doing this mainly for me. I like Spigot but **IN MY OPINION**:
 * the only real advantage it has over CraftBukkit is the integrated Orebfuscator
 
 I decided to just make my own simple fork. I don't know what I will add to it.
-There's no plan, and there's no support. CraftNukkit is under GPLv3.
+There's no plan, and there's no support. Nukkit is under GPLv3.
