@@ -3,18 +3,17 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Sun, 7 Apr 2014 11:57:35 +0200
 Subject: [PATCH] Compressed nibble arrays.
 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0012-Compressed-Nibble-Arrays.patch
-- Implement 'lightening' of NibbleArrays - only allocate buffers when non-trivial value Saving from 40-45% of memory use by chunk section data.
-- Finish up NibbleArray lightening work - use for Snapshots, reduce copies
-- Fix nibble handling with NBT - arrays aren't copied by NBTByteArray
+* Implement 'lightening' of NibbleArrays - only allocate buffers when non-trivial value Saving from 40-45% of memory use by chunk section data.
+* Finish up NibbleArray lightening work - use for Snapshots, reduce copies
+* Fix nibble handling with NBT - arrays aren't copied by NBTByteArray
 
 Modified files:
-- src/main/java/net/minecraft/server/ChunkRegionLoader.java
-- src/main/java/net/minecraft/server/ChunkSection.java
-- src/main/java/net/minecraft/server/NibbleArray.java
-- src/main/java/net/minecraft/server/OldChunkLoader.java
-- src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-- src/main/java/org/bukkit/craftbukkit/CraftChunk.java
+* src/main/java/net/minecraft/server/ChunkRegionLoader.java
+* src/main/java/net/minecraft/server/ChunkSection.java
+* src/main/java/net/minecraft/server/NibbleArray.java
+* src/main/java/net/minecraft/server/OldChunkLoader.java
+* src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
+* src/main/java/org/bukkit/craftbukkit/CraftChunk.java
 
 diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
 index d5cf88d..4dd0bcc 100644
@@ -406,4 +405,4 @@ index b2c6ef4..3c15413 100644
              }
          }
  
--- 
+--

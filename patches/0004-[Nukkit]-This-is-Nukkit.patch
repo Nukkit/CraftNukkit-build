@@ -3,14 +3,14 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:09:10 +0200
 Subject: [PATCH] This is Nukkit.
 
-- Edit README.md
-- Edit pom.xml
-- Change name of Server implementation
+* Edit README.md
+* Edit pom.xml
+* Change name of Server implementation
 
 Modified files:
-- README.md
-- pom.xml
-- src/main/java/org/bukkit/craftbukkit/CraftServer.java
+* README.md
+* pom.xml
+* src/main/java/org/bukkit/craftbukkit/CraftServer.java
 
 diff --git a/README.md b/README.md
 index cda766b..4f3686f 100644
@@ -61,7 +61,7 @@ index ab24e56..2dc921f 100644
 +  <groupId>fr.ribesg.nukkit</groupId>
 +  <artifactId>nukkit</artifactId>
    <packaging>jar</packaging>
-   <version>1.7.2-R0.3</version>
+   <version>1.7.9-R0.1</version>
 -  <name>CraftBukkit</name>
 -  <url>http://www.bukkit.org</url>
 +  <name>Nukkit</name>
@@ -71,8 +71,8 @@ index ab24e56..2dc921f 100644
      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 @@ -14,29 +14,16 @@
      <junit.version>4.11</junit.version>
-     <minecraft.version>1.7.2</minecraft.version>
-     <minecraft_version>1_7_R1</minecraft_version>
+     <minecraft.version>1.7.9</minecraft.version>
+     <minecraft_version>1_7_R3</minecraft_version>
 -    <buildtag.prefix>git-Bukkit-</buildtag.prefix>
 +    <buildtag.prefix>git-Nukkit-</buildtag.prefix>
      <buildtag.suffix></buildtag.suffix>
@@ -128,4 +128,4 @@ index e6c8575..30389a9 100644
      private final String serverVersion;
      private final String bukkitVersion = Versioning.getBukkitVersion();
      private final Logger logger = Logger.getLogger("Minecraft");
--- 
+--

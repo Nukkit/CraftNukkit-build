@@ -3,10 +3,8 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Sun, 7 Apr 2014 13:05:32 +0200
 Subject: [PATCH] More efficient Chunk save queue.
 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0007-More-Efficient-Chunk-Save-Queue.patch
-
 Modified files:
-- src/main/java/net/minecraft/server/ChunkRegionLoader.java
+* src/main/java/net/minecraft/server/ChunkRegionLoader.java
 
 diff --git a/src/main/java/net/minecraft/server/ChunkRegionLoader.java b/src/main/java/net/minecraft/server/ChunkRegionLoader.java
 index d5cf88d..1e1499e 100644
@@ -99,4 +97,4 @@ index d5cf88d..1e1499e 100644
          }
  
          if (pendingchunktosave != null) {
--- 
+--

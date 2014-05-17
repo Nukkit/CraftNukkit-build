@@ -3,15 +3,12 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Sun, 7 Apr 2014 12:35:52 +0200
 Subject: [PATCH] Better Chunk tick selection.
 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0005-Better-Chunk-Tick-Selection.patch
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0061-Fix-some-chunks-not-being-sent-to-the-client.patch
-
 Modified files:
-- pom.xml
-- src/main/java/fr/ribesg/nukkit/Nukkit.java
-- src/main/java/net/minecraft/server/World.java
-- src/main/java/net/minecraft/server/WorldServer.java
-- src/main/java/net/minecraft/server/Chunk.java
+* pom.xml
+* src/main/java/fr/ribesg/nukkit/Nukkit.java
+* src/main/java/net/minecraft/server/World.java
+* src/main/java/net/minecraft/server/WorldServer.java
+* src/main/java/net/minecraft/server/Chunk.java
 
 diff --git a/pom.xml b/pom.xml
 index 2dc921f..c8bf43d 100644
@@ -103,11 +100,11 @@ index cdbf2cd..2c947ec 100644
      // CraftBukkit start - public, longhashset
 -    protected LongHashSet chunkTickList = new LongHashSet();
 +    // protected LongHashSet chunkTickList = new LongHashSet(); // Nukkit
-     private int L;
+     private int K;
      public boolean allowMonsters;
      public boolean allowAnimals;
 @@ -76,6 +76,30 @@ public abstract class World implements IBlockAccess {
-     private boolean N;
+     private boolean M;
      int[] I;
  
 +    // Nukkit start
@@ -147,11 +144,11 @@ index cdbf2cd..2c947ec 100644
 +        this.chunkTickList.setAutoCompactionFactor(0);
 +        // Nukkit end
  
-         this.L = this.random.nextInt(12000);
+         this.K = this.random.nextInt(12000);
          this.allowMonsters = true;
-@@ -1912,24 +1941,40 @@ public abstract class World implements IBlockAccess {
-         int j;
+@@ -1990,24 +2019,40 @@ public abstract class World implements IBlockAccess {
          int k;
+         int l;
  
 +        // Nukkit start
 +        int optimalChunks = fr.ribesg.nukkit.Nukkit.instance.chunksPerTick;
@@ -171,18 +168,18 @@ index cdbf2cd..2c947ec 100644
              entityhuman = (EntityHuman) this.players.get(i);
              j = MathHelper.floor(entityhuman.locX / 16.0D);
              k = MathHelper.floor(entityhuman.locZ / 16.0D);
-             byte b0 = 7;
+             l = this.p();
  
--            for (int l = -b0; l <= b0; ++l) {
--                for (int i1 = -b0; i1 <= b0; ++i1) {
+-            for (int i1 = -l; i1 <= l; ++i1) {
+-                for (int j1 = -l; j1 <= l; ++j1) {
 -                    // CraftBukkit start - Don't tick chunks queued for unload
 -                    ChunkProviderServer chunkProviderServer = ((WorldServer) entityhuman.world).chunkProviderServer;
--                    if (chunkProviderServer.unloadQueue.contains(l + j, i1 + k)) {
+-                    if (chunkProviderServer.unloadQueue.contains(i1 + j, j1 + k)) {
 -                        continue;
 -                    }
 -                    // CraftBukkit end
 -
--                    this.chunkTickList.add(org.bukkit.craftbukkit.util.LongHash.toLong(l + j, i1 + k)); // CraftBukkit
+-                    this.chunkTickList.add(org.bukkit.craftbukkit.util.LongHash.toLong(i1 + j, j1 + k)); // CraftBukkit
 +            // Nukkit start - Always update the chunk the player is on
 +            long key = chunkToKey( j, k );
 +            int existingPlayers = Math.max( 0, chunkTickList.get( key ) ); // filter out -1
@@ -259,4 +256,4 @@ index 3fc83e5..3712009 100644
      }
  
      public ChunkCoordIntPair l() {
--- 
+--

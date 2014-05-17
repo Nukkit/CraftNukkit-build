@@ -3,12 +3,11 @@ From: Ribesg <ribesg@yahoo.fr>
 Date: Tue, 8 Apr 2014 10:37:23 +0200
 Subject: [PATCH] Add optional tick shuffling
 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0098-Add-Optional-Tick-Shuffling.patch
-- This prevents players from 'gaming' the server, and strategically relogging to increase their position in the tick order.
+This prevents players from 'gaming' the server, and strategically relogging to increase their position in the tick order.
 
 Modified files:
-- src/main/java/fr/ribesg/nukkit/Nukkit.java
-- src/main/java/net/minecraft/server/ServerConnection.java
+* src/main/java/fr/ribesg/nukkit/Nukkit.java
+* src/main/java/net/minecraft/server/ServerConnection.java
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 index 1cb8130..2eb0896 100644
@@ -74,4 +73,4 @@ index 406fd64..34b72d3 100644
              Iterator iterator = this.f.iterator();
  
              while (iterator.hasNext()) {
--- 
+--

@@ -4,15 +4,15 @@ Date: Fri, 4 Apr 2014 20:12:49 +0200
 Subject: [PATCH] Add Nukkit class and configuration.
 
 Modified files:
-- src/main/java/fr/ribesg/nukkit/Nukkit.java
-- src/main/java/org/bukkit/craftbukkit/CraftServer.java
+* src/main/java/fr/ribesg/nukkit/Nukkit.java
+* src/main/java/org/bukkit/craftbukkit/CraftServer.java
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 new file mode 100644
-index 0000000..ecccbb6
+index 0000000..b7508c4
 --- /dev/null
 +++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,126 @@
 +package fr.ribesg.nukkit;
 +
 +import org.bukkit.configuration.InvalidConfigurationException;
@@ -65,7 +65,8 @@ index 0000000..ecccbb6
 +        this.server = server;
 +
 +        final File bukkitConfigFile = server.getConfigFile();
-+        final String pathPrefix = bukkitConfigFile.getParentFile() == null ? "" : bukkitConfigFile.getParentFile().getPath() + File.pathSeparatorChar;
++        final String pathPrefix = bukkitConfigFile.getParentFile() == null ? "" : bukkitConfigFile.getParentFile().getPath()
++                + File.pathSeparatorChar;
 +        final File nukkitConfigFile = new File(pathPrefix + "nukkit.yml");
 +        if (!nukkitConfigFile.exists()) {
 +            createConfig(nukkitConfigFile);
@@ -113,10 +114,10 @@ index 0000000..ecccbb6
 +    }
 +
 +    /**
-+      * Loads the configuration from the nukkit.yml file.
-+      *
-+      * @param nukkitConfigFile the nukkit.yml file
-+      */
++     * Loads the configuration from the nukkit.yml file.
++     *
++     * @param nukkitConfigFile the nukkit.yml file
++     */
 +    private void loadConfig(final File nukkitConfigFile) {
 +        final YamlConfiguration config = new YamlConfiguration();
 +
@@ -139,10 +140,10 @@ index 0000000..ecccbb6
 +
 +}
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 30389a9..861744c 100644
+index 3be5174..be6707a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -254,6 +254,8 @@ public final class CraftServer implements Server {
+@@ -259,6 +259,8 @@ public final class CraftServer implements Server {
              getLogger().info("Console input is disabled due to --noconsole command argument");
          }
  
@@ -150,8 +151,8 @@ index 30389a9..861744c 100644
 +
          configuration = YamlConfiguration.loadConfiguration(getConfigFile());
          configuration.options().copyDefaults(true);
-         configuration.setDefaults(YamlConfiguration.loadConfiguration(getClass().getClassLoader().getResourceAsStream("configurations/bukkit.yml")));
-@@ -317,7 +319,7 @@ public final class CraftServer implements Server {
+         configuration.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("configurations/bukkit.yml"), Charsets.UTF_8)));
+@@ -322,7 +324,7 @@ public final class CraftServer implements Server {
          return overrideAllCommandBlockCommands || commandsConfiguration.getStringList("command-block-overrides").contains(command);
      }
  
@@ -160,4 +161,4 @@ index 30389a9..861744c 100644
          return (File) console.options.valueOf("bukkit-settings");
      }
  
--- 
+--

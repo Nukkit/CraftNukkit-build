@@ -4,7 +4,7 @@ Date: Fri, 4 Apr 2014 22:03:55 +0200
 Subject: [PATCH] Disable CraftBukkit auto-updater.
 
 Modified files:
-- src/main/java/org/bukkit/craftbukkit/CraftServer.java
+* src/main/java/org/bukkit/craftbukkit/CraftServer.java
 
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 index 861744c..0f50333 100644
@@ -19,4 +19,4 @@ index 861744c..0f50333 100644
          updater.setSuggestChannels(configuration.getBoolean("auto-updater.suggest-channels"));
          updater.getOnBroken().addAll(configuration.getStringList("auto-updater.on-broken"));
          updater.getOnUpdate().addAll(configuration.getStringList("auto-updater.on-update"));
--- 
+--

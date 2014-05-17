@@ -2,11 +2,9 @@ From b0978cfb7bc587354bdb10b7e89e80018e433dcc Mon Sep 17 00:00:00 2001
 From: Ribesg <ribesg@yahoo.fr>
 Date: Tue, 8 Apr 2014 11:05:48 +0200
 Subject: [PATCH] Fix TileEntities getting ticked after being queued for removal
- 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0127-Fix-TileEntities-getting-ticked-after-being-queued-f.patch
 
 Modified files:
-- src/main/java/net/minecraft/server/World.java
+* src/main/java/net/minecraft/server/World.java
 
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
 index 2c3be16..cd27d68 100644
@@ -21,13 +19,13 @@ index 2c3be16..cd27d68 100644
 +            this.tileEntityList.removeAll(this.b);
 +            this.b.clear();
 +        } // Nukkit end
-         this.N = true;
+         this.M = true;
          Iterator iterator = this.tileEntityList.iterator();
  
 @@ -1316,10 +1321,6 @@ public abstract class World implements IBlockAccess {
          }
  
-         this.N = false;
+         this.M = false;
 -        if (!this.b.isEmpty()) {
 -            this.tileEntityList.removeAll(this.b);
 -            this.b.clear();
@@ -35,4 +33,4 @@ index 2c3be16..cd27d68 100644
  
          this.methodProfiler.c("pendingBlockEntities");
          if (!this.a.isEmpty()) {
--- 
+--

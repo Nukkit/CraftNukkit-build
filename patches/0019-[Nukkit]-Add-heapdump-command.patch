@@ -7,8 +7,8 @@ This command will dump a Heap snapshot into a file.
 This is useful to debug memory leaks even on a production server.
 
 Modified files:
-- src/main/java/fr/ribesg/nukkit/Nukkit.java
-- src/main/java/fr/ribesg/nukkit/command/HeapDumpCommand.java
+* src/main/java/fr/ribesg/nukkit/Nukkit.java
+* src/main/java/fr/ribesg/nukkit/command/HeapDumpCommand.java
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 index 2eb0896..786b36e 100644
@@ -34,9 +34,10 @@ new file mode 100644
 index 0000000..e80b20b
 --- /dev/null
 +++ b/src/main/java/fr/ribesg/nukkit/command/HeapDumpCommand.java
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,102 @@
 +package fr.ribesg.nukkit.command;
 +
++import org.bukkit.Bukkit;
 +import org.bukkit.ChatColor;
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
@@ -107,6 +108,7 @@ index 0000000..e80b20b
 +
 +        // DUMP ALL THE THINGZ
 +        try {
++            Bukkit.broadcastMessage(ChatColor.GOLD + "Heap dump...");
 +            final long start = System.nanoTime();
 +            dumpHeap(fileName, !(args.length > 0 && "all".equalsIgnoreCase(args[0])));
 +            final long end = System.nanoTime();
@@ -135,4 +137,4 @@ index 0000000..e80b20b
 +        }
 +    }
 +}
--- 
+--

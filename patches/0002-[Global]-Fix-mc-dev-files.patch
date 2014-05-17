@@ -3,14 +3,13 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:06:47 +0200
 Subject: [PATCH] Fix mc-dev files.
 
-- Add missing 'throws' declaration in PacketPlayOutMapChunk
+* Adds missing 'throws' declaration in PacketPlayOutMapChunk
 
 Modified files:
-- src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-- src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
+* src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 
 diff --git a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
-index 4f64207..b25e0f6 100644
+index 0239d12..0af58aa 100644
 --- a/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 +++ b/src/main/java/net/minecraft/server/PacketPlayOutMapChunk.java
 @@ -44,7 +44,7 @@ public class PacketPlayOutMapChunk extends Packet {
@@ -22,114 +21,4 @@ index 4f64207..b25e0f6 100644
          this.a = packetdataserializer.readInt();
          this.b = packetdataserializer.readInt();
          this.inflatedBuffer = packetdataserializer.readBoolean();
-diff --git a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-index 3f072b2..d22a480 100644
---- a/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-+++ b/src/main/java/net/minecraft/server/NBTCompressedStreamTools.java
-@@ -16,6 +16,7 @@ import java.util.zip.GZIPOutputStream;
- public class NBTCompressedStreamTools {
- 
-     public static NBTTagCompound a(InputStream inputstream) {
-+        try {
-         DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(inputstream)));
- 
-         NBTTagCompound nbttagcompound;
-@@ -27,9 +28,13 @@ public class NBTCompressedStreamTools {
-         }
- 
-         return nbttagcompound;
-+        } catch (IOException e) {
-+            throw new ReportedException(CrashReport.a(e, "Loading NBT data"));
-+        }
-     }
- 
-     public static void a(NBTTagCompound nbttagcompound, OutputStream outputstream) {
-+        try {
-         DataOutputStream dataoutputstream = new DataOutputStream(new GZIPOutputStream(outputstream));
- 
-         try {
-@@ -37,9 +42,13 @@ public class NBTCompressedStreamTools {
-         } finally {
-             dataoutputstream.close();
-         }
-+        } catch (IOException e) {
-+            throw new ReportedException(CrashReport.a(e, "Saving NBT data"));
-+        }
-     }
- 
-     public static NBTTagCompound a(byte[] abyte) {
-+        try {
-         DataInputStream datainputstream = new DataInputStream(new BufferedInputStream(new GZIPInputStream(new ByteArrayInputStream(abyte))));
- 
-         NBTTagCompound nbttagcompound;
-@@ -51,9 +60,13 @@ public class NBTCompressedStreamTools {
-         }
- 
-         return nbttagcompound;
-+        } catch (IOException e) {
-+            throw new ReportedException(CrashReport.a(e, "Loading NBT data"));
-+        }
-     }
- 
-     public static byte[] a(NBTTagCompound nbttagcompound) {
-+        try {
-         ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream();
-         DataOutputStream dataoutputstream = new DataOutputStream(new GZIPOutputStream(bytearrayoutputstream));
- 
-@@ -64,9 +77,13 @@ public class NBTCompressedStreamTools {
-         }
- 
-         return bytearrayoutputstream.toByteArray();
-+        } catch (IOException e) {
-+            throw new ReportedException(CrashReport.a(e, "Saving NBT data"));
-+        }
-     }
- 
-     public static NBTTagCompound a(DataInput datainput) {
-+        try {
-         NBTBase nbtbase = a(datainput, 0);
- 
-         if (nbtbase instanceof NBTTagCompound) {
-@@ -74,13 +91,20 @@ public class NBTCompressedStreamTools {
-         } else {
-             throw new IOException("Root tag must be a named compound tag");
-         }
-+        } catch (IOException e) {
-+            throw new ReportedException(CrashReport.a(e, "Loading NBT data"));
-+        }
-     }
- 
-     public static void a(NBTTagCompound nbttagcompound, DataOutput dataoutput) {
-+        try {
-         a((NBTBase) nbttagcompound, dataoutput);
-+        } catch (IOException e) {
-+            throw new ReportedException(CrashReport.a(e, "Saving NBT data"));
-+        }
-     }
- 
--    private static void a(NBTBase nbtbase, DataOutput dataoutput) {
-+    private static void a(NBTBase nbtbase, DataOutput dataoutput) throws IOException {
-         dataoutput.writeByte(nbtbase.getTypeId());
-         if (nbtbase.getTypeId() != 0) {
-             dataoutput.writeUTF("");
-@@ -88,7 +112,7 @@ public class NBTCompressedStreamTools {
-         }
-     }
- 
--    private static NBTBase a(DataInput datainput, int i) {
-+    private static NBTBase a(DataInput datainput, int i) throws IOException {
-         byte b0 = datainput.readByte();
- 
-         if (b0 == 0) {
-@@ -100,8 +124,8 @@ public class NBTCompressedStreamTools {
-             try {
-                 nbtbase.load(datainput, i);
-                 return nbtbase;
--            } catch (IOException ioexception) {
--                CrashReport crashreport = CrashReport.a(ioexception, "Loading NBT data");
-+            } catch (Exception exception) {
-+                CrashReport crashreport = CrashReport.a(exception, "Loading NBT data");
-                 CrashReportSystemDetails crashreportsystemdetails = crashreport.a("NBT Tag");
- 
-                 crashreportsystemdetails.a("Tag name", "[UNNAMED TAG]");
--- 
+--

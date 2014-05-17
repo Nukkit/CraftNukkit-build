@@ -3,12 +3,11 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Sun, 7 Apr 2014 14:09:42 +0200
 Subject: [PATCH] Entity ticking chunk caching.
 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0044-Entity-ticking-chunk-caching.patch
-- Cache known loaded chunks so we avoid making a potentially expensive contains call for every single entity in exchange for some simple arithmetic.
-- Best case scenario, this cuts down contains call to once per chunk, worst case it adds on some simple arithmetic operations
+Cache known loaded chunks so we avoid making a potentially expensive contains call for every single entity in exchange for some simple arithmetic.
+Best case scenario, this cuts down contains call to once per chunk, worst case it adds on some simple arithmetic operations
 
 Modified files:
-- src/main/java/net/minecraft/server/World.java
+* src/main/java/net/minecraft/server/World.java
 
 diff --git a/src/main/java/net/minecraft/server/World.java b/src/main/java/net/minecraft/server/World.java
 index 7c66e3e..cbb4e77 100644
@@ -66,4 +65,4 @@ index 7c66e3e..cbb4e77 100644
  
              if (entity.vehicle != null) {
                  if (!entity.vehicle.dead && entity.vehicle.passenger == entity) {
--- 
+--

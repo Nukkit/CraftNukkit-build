@@ -3,10 +3,10 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Fri, 4 Apr 2014 20:07:58 +0200
 Subject: [PATCH] This project is GPLv3.
 
-- Remove LGPL.txt. LICENCE.txt is relevant.
+* Remove LGPL.txt. LICENCE.txt is relevant.
 
 Modified files:
-- LGPL.txt
+* LGPL.txt
 
 diff --git a/LGPL.txt b/LGPL.txt
 deleted file mode 100644
@@ -179,4 +179,4 @@ index 65c5ca8..0000000
 -apply, that proxy's public statement of acceptance of any version is
 -permanent authorization for you to choose that version for the
 -Library.
--- 
+--

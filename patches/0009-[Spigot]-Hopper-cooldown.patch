@@ -3,10 +3,8 @@ From: Ribesg <Ribesg@yahoo.fr>
 Date: Sun, 6 Apr 2014 21:31:35 +0200
 Subject: [PATCH] Hopper cooldown.
 
-https://github.com/SpigotMC/Spigot/blob/master/CraftBukkit-Patches/0029-Hopper-Cooldowns.patch
-
 Modified files:
-- src/main/java/net/minecraft/server/TileEntityHopper.java
+* src/main/java/net/minecraft/server/TileEntityHopper.java
 
 diff --git a/src/main/java/net/minecraft/server/TileEntityHopper.java b/src/main/java/net/minecraft/server/TileEntityHopper.java
 index 730eb78..22467df 100644
@@ -21,4 +19,4 @@ index 730eb78..22467df 100644
              return false;
          } else {
              return false;
--- 
+--
