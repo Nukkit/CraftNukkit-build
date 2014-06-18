@@ -1,6 +1,6 @@
 #!/bin/bash -ex
 
-TAG="1.7.9-R0.1"
+TAG="1.7.9-R0.2"
 
 # Get good version of CraftBukkit
 git clone https://github.com/Bukkit/CraftBukkit.git
