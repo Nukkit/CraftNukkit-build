@@ -1,7 +1,7 @@
-From f27c45452a5e9b4b9fb1cf403c01e555f5ad28a1 Mon Sep 17 00:00:00 2001
+From 4b3bd59056046aa6d5ac8584904881bb615c34de Mon Sep 17 00:00:00 2001
 From: Ribesg <ribesg@yahoo.fr>
 Date: Mon, 7 Apr 2014 15:48:05 +0200
-Subject: [PATCH] Highly optimized tick loop
+Subject: [PATCH 16/20] Highly optimized tick loop
 
 Modified files:
 * src/main/java/fr/ribesg/nukkit/Nukkit.java
@@ -9,7 +9,7 @@ Modified files:
 * src/main/java/net/minecraft/server/MinecraftServer.java
 
 diff --git a/src/main/java/fr/ribesg/nukkit/Nukkit.java b/src/main/java/fr/ribesg/nukkit/Nukkit.java
-index a57f51b..1cb8130 100644
+index 1867c22..edaade2 100644
 --- a/src/main/java/fr/ribesg/nukkit/Nukkit.java
 +++ b/src/main/java/fr/ribesg/nukkit/Nukkit.java
 @@ -1,5 +1,6 @@
@@ -30,10 +30,10 @@ index a57f51b..1cb8130 100644
  
 diff --git a/src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java b/src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java
 new file mode 100644
-index 0000000..12f1674
+index 0000000..8cb11e3
 --- /dev/null
 +++ b/src/main/java/fr/ribesg/nukkit/command/TicksPerSecondCommand.java
-@@ -0,0 +1,32 @@
+@@ -0,0 +1,40 @@
 +package fr.ribesg.nukkit.command;
 +
 +import net.minecraft.server.MinecraftServer;
@@ -41,13 +41,18 @@ index 0000000..12f1674
 +import org.bukkit.command.Command;
 +import org.bukkit.command.CommandSender;
 +
++import java.text.DecimalFormat;
++
 +public class TicksPerSecondCommand extends Command {
++
++    private DecimalFormat format;
 +
 +    public TicksPerSecondCommand() {
 +        super("tps");
 +        this.description = "Gets the current ticks per second for the server";
 +        this.usageMessage = "/tps";
 +        this.setPermission("nukkit.command.tps");
++        this.format = new DecimalFormat("0.0#");
 +    }
 +
 +    @Override
@@ -57,17 +62,20 @@ index 0000000..12f1674
 +        }
 +
 +        final double[] recentTps = MinecraftServer.getServer().recentTps;
-+        sender.sendMessage(ChatColor.GOLD + "TPS from last 1m, 5m, 15m: " + recentTps[0] + ", " + recentTps[1] + ", " + recentTps[2]);
++        sender.sendMessage(ChatColor.GOLD + "TPS from last 1m / 5m / 15m: " +
++                format(recentTps[0]) + ChatColor.GOLD + " / " +
++                format(recentTps[1]) + ChatColor.GOLD + " / " +
++                format(recentTps[2]));
 +        return true;
 +    }
 +
 +    private String format(double tps) {
-+        return ((tps > 18.0) ? ChatColor.GREEN : (tps > 16.0) ? ChatColor.YELLOW : ChatColor.RED).toString() +
-+                ((tps > 20.0) ? "*" : "") + Math.min(Math.round(tps * 100.0) / 100.0, 20.0);
++        return ((tps > 18.0) ? ChatColor.GREEN : (tps > 16.0) ? ChatColor.YELLOW : ChatColor.RED) +
++                this.format.format(Math.min(tps, 20.0)) + ((tps > 20.0) ? "*" : "");
 +    }
 +}
 diff --git a/src/main/java/net/minecraft/server/MinecraftServer.java b/src/main/java/net/minecraft/server/MinecraftServer.java
-index 6a01982..899e527 100644
+index f673d64..80b8f64 100644
 --- a/src/main/java/net/minecraft/server/MinecraftServer.java
 +++ b/src/main/java/net/minecraft/server/MinecraftServer.java
 @@ -107,6 +107,16 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
@@ -87,7 +95,7 @@ index 6a01982..899e527 100644
      public MinecraftServer(OptionSet options, Proxy proxy) { // CraftBukkit - signature file -> OptionSet
          this.X = new UserCache(this, a);
          j = this;
-@@ -442,36 +452,30 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
+@@ -441,36 +451,30 @@ public abstract class MinecraftServer implements ICommandListener, Runnable, IMo
                  this.q.setServerInfo(new ServerPingServerData("1.7.9", 5));
                  this.a(this.q);
  
