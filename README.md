@@ -3,6 +3,8 @@
 Nukkit
 ===========
 
+[![Join the chat at https://gitter.im/OldNukkit/Nukkit-build](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OldNukkit/Nukkit-build?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 * Basically CraftBukkit with stuff
 * Will only be updated to CraftBukkit Beta and Recommended Builds
 
